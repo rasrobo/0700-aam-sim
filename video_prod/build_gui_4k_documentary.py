@@ -69,8 +69,9 @@ SCENES = [
             "featuring a seven-inch color touchscreen, sixteen RGB velocity pads, four continuous Q-Link encoders, "
             "and a tactile navigation cluster. And this is 0700-AAM-SIM: our photorealistic, one-to-one "
             "skeuomorphic software simulator running directly in your web browser with complete hardware button parity—"
-            "including the full mode matrix, bank select with status LEDs, and every physical button flanking the central "
-            "jog wheel: Back, Copy, Up, Down, Left, Right directional cursor keys, minus, and plus."
+            "with every single button in the exact same location as the physical device: the four function columns "
+            "directly beneath the touchscreen flanking the central jog wheel, Bank select A through D with individual status LEDs, "
+            "and the four corner buttons Back, Copy, minus, and plus surrounding the central data wheel."
         ),
         "visual_key": "comparison"
     },
@@ -229,72 +230,83 @@ def generate_4k_scene_image(scene_info: Dict[str, Any], out_path: Path):
             draw.rounded_rectangle([(bx, 810), (bx + 125, 860)], radius=6, fill=(0, 60, 80) if idx == 0 else (22, 26, 34), outline=CYAN_ACCENT if idx == 0 else BORDER_COLOR)
             draw.text((bx + 18, 825), t, font=get_font(18, bold=True), fill=CYAN_ACCENT if idx == 0 else TEXT_MUTED)
 
-        # 2x5 Mode Selection Matrix (directly beneath display)
-        draw.rounded_rectangle([(2500, 895), (3380, 1035)], radius=10, fill=PANEL_BG, outline=BORDER_COLOR, width=2)
-        modes_row1 = ["MAIN", "BROWSE", "TRK MIX", "TRK MUTE", "NEXT SEQ"]
-        modes_row2 = ["STEP SEQ", "TC", "SAMPLER", "SMP EDIT", "PROG EDIT"]
-        for m_idx, mtxt in enumerate(modes_row1):
-            mx = 2515 + m_idx * 170
-            draw.rounded_rectangle([(mx, 905), (mx + 160, 955)], radius=6, fill=(28, 33, 42), outline=CYAN_ACCENT if m_idx == 0 else BORDER_COLOR)
-            draw.text((mx + 20, 920), mtxt, font=get_font(18, bold=True), fill=TEXT_WHITE)
-        for m_idx, mtxt in enumerate(modes_row2):
-            mx = 2515 + m_idx * 170
-            draw.rounded_rectangle([(mx, 965), (mx + 160, 1015)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
-            draw.text((mx + 20, 980), mtxt, font=get_font(18, bold=True), fill=TEXT_WHITE)
+        # 1:1 Physical Hardware Control Deck Directly Beneath 7" Display (y: 895 to 1540)
+        draw.rounded_rectangle([(2500, 895), (3380, 1540)], radius=14, fill=PANEL_BG, outline=BORDER_COLOR, width=2)
 
-        # 1:1 Hardware Navigation Deck (Jog Wheel with Complete Flanking Cluster) (y: 1050 to 1540)
-        draw.rounded_rectangle([(2500, 1050), (3380, 1530)], radius=14, fill=PANEL_BG, outline=BORDER_COLOR, width=2)
+        # 1. LEFT FLANK: Columns 1 & 2 (x: 2515 to 2760)
+        # Col 1: MAIN, TAP TEMPO, NOTE REPEAT, STEP SEQ
+        col1_btns = [("MAIN", "GRID", CYAN_ACCENT), ("TAP TEMPO", "MASTER", TEXT_WHITE), ("NOTE REPEAT", "LATCH", TEXT_WHITE), ("STEP SEQ", "AUTOMATION", TEXT_WHITE)]
+        for idx, (p_text, s_text, col) in enumerate(col1_btns):
+            by = 915 + idx * 115
+            draw.rounded_rectangle([(2515, by), (2630, by + 85)], radius=6, fill=(28, 33, 42), outline=col, width=2 if idx == 0 else 1)
+            draw.text((2530, by + 18), p_text, font=get_font(15, bold=True), fill=col)
+            draw.text((2530, by + 48), s_text, font=get_font(12, bold=False), fill=TEXT_MUTED)
 
-        # Left Flank: Timing (Tap Tempo / Note Repeat)
-        draw.rounded_rectangle([(2520, 1140), (2630, 1220)], radius=8, fill=(30, 36, 46), outline=CYAN_ACCENT, width=2)
-        draw.text((2530, 1165), "TAP TEMPO", font=get_font(16, bold=True), fill=TEXT_WHITE)
-        draw.rounded_rectangle([(2520, 1240), (2630, 1320)], radius=8, fill=(30, 36, 46), outline=BORDER_COLOR)
-        draw.text((2525, 1265), "NOTE REPEAT", font=get_font(15, bold=True), fill=TEXT_WHITE)
+        # Col 2: BROWSE, TRACK MIX, TRACK MUTE
+        col2_btns = [("BROWSE", "SAVE", TEXT_WHITE), ("TRACK MIX", "PAD MIX", TEXT_WHITE), ("TRACK MUTE", "PAD MUTE", TEXT_WHITE)]
+        for idx, (p_text, s_text, col) in enumerate(col2_btns):
+            by = 915 + idx * 115
+            draw.rounded_rectangle([(2645, by), (2760, by + 85)], radius=6, fill=(28, 33, 42), outline=col, width=1)
+            draw.text((2660, by + 18), p_text, font=get_font(15, bold=True), fill=col)
+            draw.text((2660, by + 48), s_text, font=get_font(12, bold=False), fill=TEXT_MUTED)
 
-        # Center: Banks Select Row (Banks A, B, C, D with LED pips)
+        # 2. CENTER: Banks A-D on top + Central Jog Wheel flanked by 4 corner buttons (x: 2775 to 3105)
+        # Banks Row
         banks_short = [("BANK A", CYAN_ACCENT), ("BANK B", AMBER_ACCENT), ("BANK C", GREEN_ACCENT), ("BANK D", PINK_ACCENT)]
         for b_idx, (bname, bcol) in enumerate(banks_short):
-            bx = 2655 + b_idx * 135
-            draw.rounded_rectangle([(bx, 1065), (bx + 125, 1115)], radius=6, fill=(0, 45, 60) if b_idx == 0 else (24, 28, 36), outline=bcol, width=2 if b_idx == 0 else 1)
-            draw.ellipse([(bx + 15, 1083), (bx + 27, 1095)], fill=bcol)
-            draw.text((bx + 35, 1080), bname, font=get_font(16, bold=True), fill=TEXT_WHITE)
+            bx = 2775 + b_idx * 82
+            draw.rounded_rectangle([(bx, 915), (bx + 76, 985)], radius=6, fill=(0, 45, 60) if b_idx == 0 else (24, 28, 36), outline=bcol, width=2 if b_idx == 0 else 1)
+            draw.ellipse([(bx + 12, 930), (bx + 22, 940)], fill=bcol)
+            draw.text((bx + 26, 926), bname.split()[1], font=get_font(14, bold=True), fill=TEXT_WHITE)
+            draw.text((bx + 26, 952), ["E", "F", "G", "H"][b_idx], font=get_font(12, bold=False), fill=TEXT_MUTED)
 
-        # Center: Massive Central Jog Wheel & Full Flanking Buttons (1:1 Parity)
-        # Top Row: BACK / UNDO (left), UP ▲ (center), COPY / PASTE (right)
-        draw.rounded_rectangle([(2665, 1130), (2775, 1190)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
-        draw.text((2685, 1150), "BACK", font=get_font(18, bold=True), fill=TEXT_WHITE)
-        draw.rounded_rectangle([(2885, 1130), (2975, 1190)], radius=6, fill=(24, 32, 42), outline=CYAN_ACCENT, width=2)
-        draw.text((2920, 1145), "▲", font=get_font(24, bold=True), fill=CYAN_ACCENT)
-        draw.rounded_rectangle([(3085, 1130), (3195, 1190)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
-        draw.text((3105, 1150), "COPY", font=get_font(18, bold=True), fill=TEXT_WHITE)
+        # 4 Corner Buttons surrounding the Jog Wheel:
+        # Top-Left: BACK / UNDO
+        draw.rounded_rectangle([(2775, 1030), (2880, 1115)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
+        draw.text((2800, 1045), "BACK", font=get_font(16, bold=True), fill=TEXT_WHITE)
+        draw.text((2800, 1075), "UNDO", font=get_font(12, bold=False), fill=TEXT_MUTED)
 
-        # Middle Row: LEFT ◄ (left), JOG WHEEL with dimple + ENTER (center), RIGHT ► (right)
-        draw.rounded_rectangle([(2785, 1240), (2845, 1330)], radius=6, fill=(24, 32, 42), outline=CYAN_ACCENT, width=2)
-        draw.text((2805, 1265), "◄", font=get_font(24, bold=True), fill=CYAN_ACCENT)
+        # Top-Right: COPY / PASTE
+        draw.rounded_rectangle([(3000, 1030), (3105, 1115)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
+        draw.text((3025, 1045), "COPY", font=get_font(16, bold=True), fill=TEXT_WHITE)
+        draw.text((3025, 1075), "PASTE", font=get_font(12, bold=False), fill=TEXT_MUTED)
 
-        # Massive Jog Dial (center)
-        draw.ellipse([(2855, 1200), (3005, 1350)], fill=(35, 40, 50), outline=CYAN_ACCENT, width=4)
-        draw.ellipse([(2880, 1215), (2910, 1245)], fill=(20, 24, 30)) # finger dimple
-        draw.ellipse([(2900, 1245), (2960, 1305)], fill=(50, 58, 70), outline=(90, 100, 115)) # enter button
-        draw.text((2912, 1267), "ENTER", font=get_font(12, bold=True), fill=TEXT_WHITE)
+        # Central Rotary Jog Wheel (centered between the 4 corner buttons)
+        draw.ellipse([(2835, 1100), (3045, 1310)], fill=(35, 40, 50), outline=CYAN_ACCENT, width=4)
+        draw.ellipse([(2865, 1125), (2905, 1165)], fill=(20, 24, 30)) # finger dimple
+        draw.ellipse([(2895, 1160), (2985, 1250)], fill=(50, 58, 70), outline=(90, 100, 115)) # enter button
+        draw.text((2915, 1195), "ENTER", font=get_font(16, bold=True), fill=TEXT_WHITE)
 
-        draw.rounded_rectangle([(3015, 1240), (3075, 1330)], radius=6, fill=(24, 32, 42), outline=CYAN_ACCENT, width=2)
-        draw.text((3035, 1265), "►", font=get_font(24, bold=True), fill=CYAN_ACCENT)
+        # Bottom-Left: - / DEC
+        draw.rounded_rectangle([(2775, 1295), (2880, 1380)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
+        draw.text((2815, 1310), "-", font=get_font(24, bold=True), fill=TEXT_WHITE)
+        draw.text((2805, 1345), "DEC", font=get_font(12, bold=False), fill=TEXT_MUTED)
 
-        # Bottom Row: - / DEC (left), DOWN ▼ (center), + / INC (right)
-        draw.rounded_rectangle([(2665, 1360), (2775, 1420)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
-        draw.text((2705, 1375), "-", font=get_font(26, bold=True), fill=TEXT_WHITE)
-        draw.rounded_rectangle([(2885, 1360), (2975, 1420)], radius=6, fill=(24, 32, 42), outline=CYAN_ACCENT, width=2)
-        draw.text((2920, 1375), "▼", font=get_font(24, bold=True), fill=CYAN_ACCENT)
-        draw.rounded_rectangle([(3085, 1360), (3195, 1420)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
-        draw.text((3125, 1375), "+", font=get_font(26, bold=True), fill=TEXT_WHITE)
+        # Bottom-Right: + / INC
+        draw.rounded_rectangle([(3000, 1295), (3105, 1380)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
+        draw.text((3040, 1310), "+", font=get_font(24, bold=True), fill=TEXT_WHITE)
+        draw.text((3035, 1345), "INC", font=get_font(12, bold=False), fill=TEXT_MUTED)
 
-        # Right Flank: System (MENU / SHIFT)
-        draw.rounded_rectangle([(3230, 1140), (3340, 1220)], radius=8, fill=(30, 36, 46), outline=BORDER_COLOR)
-        draw.text((3255, 1165), "MENU", font=get_font(18, bold=True), fill=TEXT_WHITE)
-        draw.rounded_rectangle([(3230, 1240), (3340, 1320)], radius=8, fill=(45, 38, 24), outline=AMBER_ACCENT, width=2)
-        draw.ellipse([(3275, 1255), (3287, 1267)], fill=AMBER_ACCENT)
-        draw.text((3255, 1280), "SHIFT", font=get_font(18, bold=True), fill=AMBER_ACCENT)
+        # 3. RIGHT FLANK: Columns 4 & 5 (x: 3120 to 3365)
+        # Col 4: TC, SAMPLER, SAMPLE EDIT
+        col4_btns = [("TC", "ON/OFF", TEXT_WHITE), ("SAMPLER", "LOOPER", TEXT_WHITE), ("SMP EDIT", "LINK EDIT", TEXT_WHITE)]
+        for idx, (p_text, s_text, col) in enumerate(col4_btns):
+            by = 915 + idx * 115
+            draw.rounded_rectangle([(3120, by), (3235, by + 85)], radius=6, fill=(28, 33, 42), outline=col, width=1)
+            draw.text((3135, by + 18), p_text, font=get_font(15, bold=True), fill=col)
+            draw.text((3135, by + 48), s_text, font=get_font(12, bold=False), fill=TEXT_MUTED)
+
+        # Col 5: NEXT SEQ, MENU, SHIFT, PROG EDIT
+        col5_btns = [("NEXT SEQ", "FX", TEXT_WHITE), ("MENU", "PREFS", TEXT_WHITE), ("SHIFT", "LOCK", AMBER_ACCENT), ("PROG EDIT", "MIDI CTRL", TEXT_WHITE)]
+        for idx, (p_text, s_text, col) in enumerate(col5_btns):
+            by = 915 + idx * 115
+            draw.rounded_rectangle([(3250, by), (3365, by + 85)], radius=6, fill=(45, 38, 24) if idx == 2 else (28, 33, 42), outline=col, width=2 if idx == 2 else 1)
+            if idx == 2:
+                draw.ellipse([(3265, by + 15), (3275, by + 25)], fill=AMBER_ACCENT)
+                draw.text((3285, by + 15), p_text, font=get_font(15, bold=True), fill=col)
+            else:
+                draw.text((3265, by + 18), p_text, font=get_font(15, bold=True), fill=col)
+            draw.text((3265, by + 48), s_text, font=get_font(12, bold=False), fill=TEXT_MUTED)
 
         # 3. RIGHT: 4 Q-Link Encoders + 5 Transport Buttons (x: 3410 to 3680)
         draw.rounded_rectangle([(3410, 480), (3680, 1020)], radius=14, fill=PANEL_BG, outline=BORDER_COLOR, width=2)

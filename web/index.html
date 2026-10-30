@@ -269,114 +269,87 @@
                         </div>
                     </div>
 
-                    <!-- ================= LOWER MAIN CONTROL PANEL (1:1 PHYSICAL PARITY) ================= -->
+                    <!-- ================= LOWER MAIN CONTROL PANEL (1:1 REAL HARDWARE LAYOUT) ================= -->
                     <div id="main-control-panel">
-                        <!-- Dual-Row Mode Selection Matrix (2 x 5 Buttons) -->
-                        <div class="mode-matrix-section">
-                            <div class="mode-matrix-header">
-                                <span class="line-left"></span>
-                                <span class="section-title">MODE SELECTION MATRIX</span>
-                                <span class="line-right"></span>
+                        <!-- Left Function Columns (Cols 1 & 2 directly beneath LCD left) -->
+                        <div class="deck-col-left">
+                            <div class="deck-button-col col-1">
+                                <button class="hw-btn hw-btn-nav active" id="btn-main" title="Main / Grid"><span class="btn-primary-text">MAIN</span><span class="btn-sub-text">GRID</span></button>
+                                <button class="hw-btn hw-btn-nav" id="btn-tap-tempo" title="Tap Tempo / Master"><span class="btn-primary-text">TAP TEMPO</span><span class="btn-sub-text">MASTER</span></button>
+                                <button class="hw-btn hw-btn-nav" id="btn-note-repeat" title="Note Repeat / Latch"><span class="btn-primary-text">NOTE REPEAT</span><span class="btn-sub-text">LATCH</span></button>
+                                <button class="hw-btn hw-btn-nav" id="btn-step-seq" title="Step Seq / Automation"><span class="btn-primary-text">STEP SEQ</span><span class="btn-sub-text">AUTOMATION</span></button>
                             </div>
-                            <div class="mode-matrix-grid">
-                                <!-- Row 1 -->
-                                <button class="hw-btn hw-btn-nav active" id="btn-main"><span class="btn-primary-text">MAIN</span><span class="btn-sub-text">GRID</span></button>
-                                <button class="hw-btn hw-btn-nav" id="btn-browse"><span class="btn-primary-text">BROWSE</span><span class="btn-sub-text">SAVE</span></button>
-                                <button class="hw-btn hw-btn-nav" id="btn-track-mix"><span class="btn-primary-text">TRACK MIX</span><span class="btn-sub-text">PAD MIX</span></button>
-                                <button class="hw-btn hw-btn-nav" id="btn-track-mute"><span class="btn-primary-text">TRACK MUTE</span><span class="btn-sub-text">PAD MUTE</span></button>
-                                <button class="hw-btn hw-btn-nav" id="btn-next-seq"><span class="btn-primary-text">NEXT SEQ</span><span class="btn-sub-text">FX</span></button>
-
-                                <!-- Row 2 -->
-                                <button class="hw-btn hw-btn-nav" id="btn-step-seq"><span class="btn-primary-text">STEP SEQ</span><span class="btn-sub-text">AUTOMATION</span></button>
-                                <button class="hw-btn hw-btn-nav" id="btn-tc"><span class="btn-primary-text">TC</span><span class="btn-sub-text">ON/OFF</span></button>
-                                <button class="hw-btn hw-btn-nav" id="btn-sampler"><span class="btn-primary-text">SAMPLER</span><span class="btn-sub-text">LOOPER</span></button>
-                                <button class="hw-btn hw-btn-nav" id="btn-sample-edit"><span class="btn-primary-text">SAMPLE EDIT</span><span class="btn-sub-text">LINK EDIT</span></button>
-                                <button class="hw-btn hw-btn-nav" id="btn-program-edit"><span class="btn-primary-text">PROG EDIT</span><span class="btn-sub-text">MIDI CTRL</span></button>
+                            <div class="deck-button-col col-2">
+                                <button class="hw-btn hw-btn-nav" id="btn-browse" title="Browse / Save"><span class="btn-primary-text">BROWSE</span><span class="btn-sub-text">SAVE</span></button>
+                                <button class="hw-btn hw-btn-nav" id="btn-track-mix" title="Track Mix / Pad Mix"><span class="btn-primary-text">TRACK MIX</span><span class="btn-sub-text">PAD MIX</span></button>
+                                <button class="hw-btn hw-btn-nav" id="btn-track-mute" title="Track Mute / Pad Mute"><span class="btn-primary-text">TRACK MUTE</span><span class="btn-sub-text">PAD MUTE</span></button>
                             </div>
                         </div>
 
-                        <!-- Hardware Navigation, Banks & Jog Wheel Deck -->
-                        <div class="navigation-deck">
-                            <!-- Left Performance Flank -->
-                            <div class="nav-flank nav-flank-left">
-                                <span class="flank-title">TIMING</span>
-                                <button class="hw-btn hw-btn-nav" id="btn-tap-tempo"><span class="btn-primary-text">TAP TEMPO</span><span class="btn-sub-text">MASTER</span></button>
-                                <button class="hw-btn hw-btn-nav" id="btn-note-repeat"><span class="btn-primary-text">NOTE REPEAT</span><span class="btn-sub-text">LATCH</span></button>
+                        <!-- Center Deck: Bank Select Row + Jog Wheel with 4 Corner Surround Buttons -->
+                        <div class="center-jog-deck">
+                            <div class="banks-header">
+                                <span class="line-left"></span>
+                                <span class="banks-title">BANKS</span>
+                                <span class="line-right"></span>
+                            </div>
+                            <div class="bank-buttons-row">
+                                <button class="hw-btn hw-btn-bank active" id="btn-bank-a" data-bank="0">
+                                    <span class="bank-led led-cyan active"></span>
+                                    <span class="btn-primary-text">BANK A</span>
+                                    <span class="btn-sub-text">E</span>
+                                </button>
+                                <button class="hw-btn hw-btn-bank" id="btn-bank-b" data-bank="1">
+                                    <span class="bank-led led-amber"></span>
+                                    <span class="btn-primary-text">BANK B</span>
+                                    <span class="btn-sub-text">F</span>
+                                </button>
+                                <button class="hw-btn hw-btn-bank" id="btn-bank-c" data-bank="2">
+                                    <span class="bank-led led-green"></span>
+                                    <span class="btn-primary-text">BANK C</span>
+                                    <span class="btn-sub-text">G</span>
+                                </button>
+                                <button class="hw-btn hw-btn-bank" id="btn-bank-d" data-bank="3">
+                                    <span class="bank-led led-pink"></span>
+                                    <span class="btn-primary-text">BANK D</span>
+                                    <span class="btn-sub-text">H</span>
+                                </button>
                             </div>
 
-                            <!-- Center: Banks + Jog Wheel & Complete Cursor Navigation Cluster -->
-                            <div class="center-jog-cluster">
-                                <!-- Bank Buttons with Individual Illuminated LEDs -->
-                                <div class="banks-header">
-                                    <span class="line-left"></span>
-                                    <span class="banks-title">BANK SELECT</span>
-                                    <span class="line-right"></span>
-                                </div>
-                                <div class="bank-buttons-row">
-                                    <button class="hw-btn hw-btn-bank active" id="btn-bank-a" data-bank="0">
-                                        <span class="bank-led led-cyan active"></span>
-                                        <span class="btn-primary-text">BANK A</span>
-                                        <span class="btn-sub-text">E</span>
-                                    </button>
-                                    <button class="hw-btn hw-btn-bank" id="btn-bank-b" data-bank="1">
-                                        <span class="bank-led led-amber"></span>
-                                        <span class="btn-primary-text">BANK B</span>
-                                        <span class="btn-sub-text">F</span>
-                                    </button>
-                                    <button class="hw-btn hw-btn-bank" id="btn-bank-c" data-bank="2">
-                                        <span class="bank-led led-green"></span>
-                                        <span class="btn-primary-text">BANK C</span>
-                                        <span class="btn-sub-text">G</span>
-                                    </button>
-                                    <button class="hw-btn hw-btn-bank" id="btn-bank-d" data-bank="3">
-                                        <span class="bank-led led-pink"></span>
-                                        <span class="btn-primary-text">BANK D</span>
-                                        <span class="btn-sub-text">H</span>
-                                    </button>
-                                </div>
+                            <!-- 1:1 Jog Wheel Surround Bezel (BACK, COPY, -, + at 4 corners of central dial) -->
+                            <div class="jog-surround-wrapper">
+                                <button class="hw-btn hw-btn-nav hw-btn-corner corner-tl" id="btn-back" title="Back / Undo"><span class="btn-primary-text">BACK</span><span class="btn-sub-text">UNDO</span></button>
+                                <button class="hw-btn hw-btn-nav hw-btn-corner corner-tr" id="btn-copy" title="Copy / Paste"><span class="btn-primary-text">COPY</span><span class="btn-sub-text">PASTE</span></button>
 
-                                <!-- Complete 1:1 Jog Wheel Surround Bezel with Directional Cursor D-Pad -->
-                                <div class="jog-quadrant-wrapper">
-                                    <!-- Top Row: BACK / UNDO, UP CURSOR, COPY / PASTE -->
-                                    <div class="quad-btn-top">
-                                        <button class="hw-btn hw-btn-nav hw-btn-corner" id="btn-back" title="Back / Undo"><span class="btn-primary-text">BACK</span><span class="btn-sub-text">UNDO</span></button>
-                                        <button class="hw-btn hw-btn-cursor hw-btn-up" id="btn-cursor-up" title="Cursor Up (▲)"><span class="cursor-glyph">▲</span><span class="btn-sub-text">UP</span></button>
-                                        <button class="hw-btn hw-btn-nav hw-btn-corner" id="btn-copy" title="Copy / Paste"><span class="btn-primary-text">COPY</span><span class="btn-sub-text">PASTE</span></button>
-                                    </div>
-
-                                    <!-- Middle Ring: LEFT CURSOR, CENTRAL JOG DIAL, RIGHT CURSOR -->
-                                    <div class="quad-middle-row">
-                                        <button class="hw-btn hw-btn-cursor hw-btn-left" id="btn-cursor-left" title="Cursor Left (◄)"><span class="cursor-glyph">◄</span><span class="btn-sub-text">PREV</span></button>
-
-                                        <!-- Massive Central Rotary Encoder Wheel -->
-                                        <div class="jog-wheel-outer" id="jog-wheel" title="Central Data Wheel (Drag or scroll to rotate, click center to enter)">
-                                            <div class="jog-dimple"></div>
-                                            <div class="jog-center-click" id="jog-center-btn" title="Push Enter">
-                                                <span class="enter-glyph">ENTER</span>
-                                            </div>
-                                        </div>
-
-                                        <button class="hw-btn hw-btn-cursor hw-btn-right" id="btn-cursor-right" title="Cursor Right (►)"><span class="cursor-glyph">►</span><span class="btn-sub-text">NEXT</span></button>
-                                    </div>
-
-                                    <!-- Bottom Row: - / DEC, DOWN CURSOR, + / INC -->
-                                    <div class="quad-btn-bottom">
-                                        <button class="hw-btn hw-btn-nav hw-btn-corner" id="btn-minus" title="Decrement (-)"><span class="btn-primary-text">-</span><span class="btn-sub-text">DEC</span></button>
-                                        <button class="hw-btn hw-btn-cursor hw-btn-down" id="btn-cursor-down" title="Cursor Down (▼)"><span class="cursor-glyph">▼</span><span class="btn-sub-text">DOWN</span></button>
-                                        <button class="hw-btn hw-btn-nav hw-btn-corner" id="btn-plus" title="Increment (+)"><span class="btn-primary-text">+</span><span class="btn-sub-text">INC</span></button>
+                                <!-- Central Rotary Data Dial -->
+                                <div class="jog-wheel-outer" id="jog-wheel" title="Central Data Wheel (Drag or scroll to rotate, click center to enter)">
+                                    <div class="jog-dimple"></div>
+                                    <div class="jog-center-click" id="jog-center-btn" title="Push Enter">
+                                        <span class="enter-glyph">ENTER</span>
                                     </div>
                                 </div>
+
+                                <button class="hw-btn hw-btn-nav hw-btn-corner corner-bl" id="btn-minus" title="Decrement (-)"><span class="btn-primary-text">-</span><span class="btn-sub-text">DEC</span></button>
+                                <button class="hw-btn hw-btn-nav hw-btn-corner corner-br" id="btn-plus" title="Increment (+)"><span class="btn-primary-text">+</span><span class="btn-sub-text">INC</span></button>
                             </div>
+                        </div>
 
-                            <!-- Right Utility Flank -->
-                            <div class="nav-flank nav-flank-right">
-                                <span class="flank-title">SYSTEM</span>
-                                <button class="hw-btn hw-btn-nav" id="btn-menu"><span class="btn-primary-text">MENU</span><span class="btn-sub-text">PREFS</span></button>
-                                <button class="hw-btn hw-btn-nav hw-btn-shift" id="btn-shift">
+                        <!-- Right Function Columns (Cols 4 & 5 directly beneath LCD right) -->
+                        <div class="deck-col-right">
+                            <div class="deck-button-col col-4">
+                                <button class="hw-btn hw-btn-nav" id="btn-tc" title="Timing Correct / On-Off"><span class="btn-primary-text">TC</span><span class="btn-sub-text">ON/OFF</span></button>
+                                <button class="hw-btn hw-btn-nav" id="btn-sampler" title="Sampler / Looper"><span class="btn-primary-text">SAMPLER</span><span class="btn-sub-text">LOOPER</span></button>
+                                <button class="hw-btn hw-btn-nav" id="btn-sample-edit" title="Sample Edit / Link Edit"><span class="btn-primary-text">SAMPLE EDIT</span><span class="btn-sub-text">LINK EDIT</span></button>
+                            </div>
+                            <div class="deck-button-col col-5">
+                                <button class="hw-btn hw-btn-nav" id="btn-next-seq" title="Next Seq / FX"><span class="btn-primary-text">NEXT SEQ</span><span class="btn-sub-text">FX</span></button>
+                                <button class="hw-btn hw-btn-nav" id="btn-menu" title="Menu / Prefs"><span class="btn-primary-text">MENU</span><span class="btn-sub-text">PREFS</span></button>
+                                <button class="hw-btn hw-btn-nav hw-btn-shift" id="btn-shift" title="Shift / Lock">
                                     <span class="shift-led led-amber"></span>
                                     <span class="btn-primary-text">SHIFT</span>
                                     <span class="btn-sub-text">LOCK</span>
                                 </button>
+                                <button class="hw-btn hw-btn-nav" id="btn-program-edit" title="Prog Edit / MIDI Ctrl"><span class="btn-primary-text">PROG EDIT</span><span class="btn-sub-text">MIDI CTRL</span></button>
                             </div>
                         </div>
                     </div>

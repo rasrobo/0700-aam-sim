@@ -433,43 +433,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-plus").addEventListener("click", () => rotateJogWheel(15));
     document.getElementById("btn-minus").addEventListener("click", () => rotateJogWheel(-15));
 
-    // Directional D-Pad Cursor Buttons
-    const btnCursorUp = document.getElementById("btn-cursor-up");
-    const btnCursorDown = document.getElementById("btn-cursor-down");
-    const btnCursorLeft = document.getElementById("btn-cursor-left");
-    const btnCursorRight = document.getElementById("btn-cursor-right");
-
-    function flashButton(btn) {
-        if (!btn) return;
-        btn.classList.add("pressed");
-        setTimeout(() => btn.classList.remove("pressed"), 120);
-    }
-
-    if (btnCursorUp) {
-        btnCursorUp.addEventListener("click", () => {
-            flashButton(btnCursorUp);
-            rotateJogWheel(15);
-        });
-    }
-    if (btnCursorDown) {
-        btnCursorDown.addEventListener("click", () => {
-            flashButton(btnCursorDown);
-            rotateJogWheel(-15);
-        });
-    }
-    if (btnCursorLeft) {
-        btnCursorLeft.addEventListener("click", () => {
-            flashButton(btnCursorLeft);
-            rotateJogWheel(-15);
-        });
-    }
-    if (btnCursorRight) {
-        btnCursorRight.addEventListener("click", () => {
-            flashButton(btnCursorRight);
-            rotateJogWheel(15);
-        });
-    }
-
     // --- Bank Selection Buttons (A, B, C, D / E, F, G, H with Shift) ---
     const bankButtons = [
         document.getElementById("btn-bank-a"),
@@ -910,16 +873,10 @@ document.addEventListener("DOMContentLoaded", () => {
         else if (e.key === "C") selectBank(2);
         else if (e.key === "D") selectBank(3);
 
-        // Jog Wheel: [ = CCW, ] = CW, Enter = Click
-        if (e.key === "[") rotateJogWheel(-15);
-        else if (e.key === "]") rotateJogWheel(15);
+        // Jog Wheel: [ / Left / Down = CCW, ] / Right / Up = CW, Enter = Click
+        if (e.key === "[" || e.key === "ArrowDown" || e.key === "ArrowLeft") { e.preventDefault(); rotateJogWheel(-15); }
+        else if (e.key === "]" || e.key === "ArrowUp" || e.key === "ArrowRight") { e.preventDefault(); rotateJogWheel(15); }
         else if (e.key === "Enter") jogCenterBtn.click();
-
-        // Directional D-Pad Cursor Keys
-        if (e.key === "ArrowUp") { e.preventDefault(); btnCursorUp.click(); }
-        else if (e.key === "ArrowDown") { e.preventDefault(); btnCursorDown.click(); }
-        else if (e.key === "ArrowLeft") { e.preventDefault(); btnCursorLeft.click(); }
-        else if (e.key === "ArrowRight") { e.preventDefault(); btnCursorRight.click(); }
         else if (e.key === "-" || e.key === "_") { e.preventDefault(); document.getElementById("btn-minus").click(); }
         else if (e.key === "+" || e.key === "=") { e.preventDefault(); document.getElementById("btn-plus").click(); }
         else if (e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-back").click(); }
