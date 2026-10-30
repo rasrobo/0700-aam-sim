@@ -95,22 +95,53 @@ ctest --output-on-failure
 
 ## Running
 
-### 1. Interactive Simulator (PTY Mode)
+### 1. Photorealistic Webpage / GUI Hardware Simulator
+
+Launch the hardware simulator web interface with built-in Web Audio sound synthesis, 16-step sequencer, and live ComProtocol bridge:
+
+```bash
+./build/0700-aam-sim --gui
+# or
+./scripts/start_gui.sh [port]
+```
+
+Open `http://localhost:8080` in your web browser.
+
+#### GUI Hardware Features:
+- **1:1 Control Surface Layout**: Anodized dark chassis, hex corner screws, recessed wells.
+- **7" Multi-Touch LCD Screen (800x480)**:
+  - **Main View**: Track details, quantization, pad monitor, real-time audio oscilloscope.
+  - **Step Sequencer**: 16 tracks x 16 steps interactive matrix with running playhead cursor.
+  - **Track Mixer**: 16 channel faders, mute/solo switches, real-time peak VU level meters.
+  - **Sampler View**: Audio waveform visualizer with start/end markers and zoom.
+  - **Pad Edit View**: Filter cutoff/resonance sliders, AHDSR amplitude envelope, semitone tuning.
+  - **Preferences**: System diagnostics, protocol framing telemetry, golden trace export.
+- **16 RGB Velocity Silicone Pads**: Banks A through H (128 pads), bank-colored backlighting (Cyan, Amber, Green, Pink, Yellow, Violet, Red, White), keyboard mapping (`Z X C V`, `A S D F`, `Q W E R`, `1 2 3 4`).
+- **Touch Strip Ribbon**: Capacitive tracking fader with 16-segment glowing LED ladder.
+- **4 Q-Link Rotary Encoders**: 360-degree radial LED indicator rings modulating Cutoff, Resonance, Decay, and Tuning in real time.
+- **Central Data Dial (Jog Wheel)**: 90px diameter dial with tactile finger indent and push-click button.
+- **Transport Control Cluster**: REC (Red LED), OVERDUB (Amber LED), STOP (White LED), PLAY (Green LED), PLAY START (Green LED).
+- **Web Audio Drum Machine**: Procedural 808/909 kicks, snares, hats, claps, toms, cymbals, and tuned sub-bass synth.
+- **ComProtocol WebSocket Bridge**: Sends and receives wire-accurate binary frames (`0x4D 0x54`, CRC-8 poly `0x31`) over WebSocket; seamlessly falls back to standalone browser audio when offline.
+
+---
+
+### 2. Interactive Simulator (PTY Mode)
 
 Launch the simulator attached to a newly created pseudo-terminal:
 
 ```bash
-./build/thumpbox-sim --pty
+./build/0700-aam-sim --pty
 ```
 
 The simulator prints the slave PTY device path (e.g. `/dev/pts/3`). You can configure the host application or symlink `/dev/ttymxc0` to point directly to this virtual port.
 
-### 2. Headless Scenario Runner
+### 3. Headless Scenario Runner
 
 Execute a deterministic test scenario script:
 
 ```bash
-./build/thumpbox-sim --scenario tests/scenarios/pad_and_knob_flow.json --assert-golden tests/golden/pad_and_knob_flow.golden.json
+./build/0700-aam-sim --scenario tests/scenarios/pad_and_knob_flow.json --assert-golden tests/golden/pad_and_knob_flow.golden.json
 ```
 
 ---

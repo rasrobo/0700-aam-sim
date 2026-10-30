@@ -62,6 +62,7 @@ struct TerminalRawMode {
 static void print_usage(const char* prog) {
     std::cout << "Usage: " << prog << " [options]\n\n"
               << "Options:\n"
+              << "  --gui, --web [port]             Launch photorealistic Webpage/GUI simulator (default: 8080)\n"
               << "  --pty [symlink]                 Run simulator on a virtual PTY (default)\n"
               << "  --socket <path>                 Run Unix domain socket server\n"
               << "  --tcp <port>                    Run TCP socket server (e.g. 23040)\n"
@@ -142,6 +143,14 @@ int main(int argc, char** argv) {
         if (arg == "--help") {
             print_usage(argv[0]);
             return 0;
+        } else if (arg == "--gui" || arg == "--web") {
+            int port = 8080;
+            if (i + 1 < argc && argv[i + 1][0] != '-') {
+                port = std::stoi(argv[++i]);
+            }
+            std::cout << "[0700-aam-sim] Launching Web GUI hardware simulator on port " << port << "...\n";
+            std::string cmd = "python3 scripts/run_web_gui.py --port " + std::to_string(port);
+            return std::system(cmd.c_str());
         } else if (arg == "--scenario" && i + 1 < argc) {
             scenario_path = argv[++i];
         } else if (arg == "--assert-golden" && i + 1 < argc) {
