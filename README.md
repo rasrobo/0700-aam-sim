@@ -4,11 +4,11 @@ A desktop simulator, virtual device harness, and headless test suite for the BE 
 
 `0700-aam-sim` emulates the physical control surface and hardware subsystems over POSIX pseudo-terminals (`pty`), Unix domain sockets, or TCP sockets. It allows firmware and application logic to develop, test, and run automated regression suites headlessly without physical hardware attached.
 
-[![Watch GUI Simulator Demo](https://img.youtube.com/vi/B5P61h6xSS4/hqdefault.jpg)](https://youtu.be/B5P61h6xSS4)
+[![Watch 4K GUI Simulator Demo](https://img.youtube.com/vi/XpizwSVyc-g/hqdefault.jpg)](https://youtu.be/XpizwSVyc-g)
 
 🎛️ **[Live Interactive Web Simulator](https://rasrobo.github.io/0700-aam-sim/)** (Zero Install — Run in Browser)  
-🎥 **[Watch GUI Walkthrough & Instrument Demo](https://youtu.be/B5P61h6xSS4)** (Unlisted)  
-📺 **[Watch Terminal Architecture & CI Pipeline Documentary](https://youtu.be/Twt-MhPzib8)** (Unlisted)
+🎥 **[Watch 4K GUI Walkthrough & Hardware Comparison Demo](https://youtu.be/XpizwSVyc-g)** (4K Ultra HD • CC-BY 4.0 Open Source Music • Unlisted)  
+📺 **[Watch Terminal Architecture & CI Pipeline Documentary](https://youtu.be/Twt-MhPzib8)** (1080p • Unlisted)
 
 
 ---

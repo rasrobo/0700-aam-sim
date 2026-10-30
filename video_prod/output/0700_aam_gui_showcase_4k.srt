@@ -1,0 +1,31 @@
+1
+00:00:00,100 --> 00:00:16,712
+This is the physical Behringer KICK, BE 0700-AAM: an integrated standalone groovebox featuring a seven-inch color touchscreen, sixteen RGB velocity pads, four continuous Q-Link encoders, and an analog capacitive touch strip.
+
+2
+00:00:16,662 --> 00:00:30,937
+And this is 0700-AAM-SIM: our photorealistic, one-to-one skeuomorphic software simulator running directly in your web browser with zero installation, zero drivers, and zero hardware barriers.
+
+3
+00:00:31,608 --> 00:00:37,258
+Every single module of the physical device's operating system has been faithfully modeled.
+
+4
+00:00:37,208 --> 00:00:57,245
+The eight-hundred-by-four-hundred-and-eighty display features six dedicated functional views: the Main Sequencer with a real-time audio oscilloscope, the sixteen-by-sixteen polyphonic Step Sequencer with a live playhead cursor, the sixteen-channel Track Mixer with peak VU metering, the sample waveform editor, and full pad envelope modulation.
+
+5
+00:00:57,908 --> 00:01:03,995
+Under the hood is a zero-latency procedural sound engine powered by the Web Audio API.
+
+6
+00:01:03,945 --> 00:01:23,095
+Strike any of the sixteen velocity-sensitive pads across Banks A through H to trigger dynamic pitch-enveloped 808 sub kicks, dual-body noise snares, metallic six-oscillator hi-hats, hand claps, toms, and tuned analog sub-bass, playable instantly with your computer keyboard or MIDI controller.
+
+7
+00:01:23,752 --> 00:01:36,439
+For embedded firmware developers, the simulator bridges directly over WebSocket using the wire-accurate binary ComProtocol, verified against four automated golden-file test suites in continuous integration.
+
+8
+00:01:36,389 --> 00:01:49,602
+It is one hundred percent open source under AGPL version three, and live right now in four K on GitHub Pages at rasrobo.github.io/0700-aam-sim.

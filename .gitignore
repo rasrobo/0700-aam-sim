@@ -28,5 +28,7 @@ test_output/
 
 # Video production artifacts
 video_prod/clips/
+video_prod/clips_4k/
+video_prod/assets/
 video_prod/output/*.mp4
 
