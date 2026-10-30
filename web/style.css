@@ -984,28 +984,104 @@ body {
 }
 
 /* ==========================================================================
-   MAIN CONTROL PANEL (Lower Center Section)
+   MAIN CONTROL PANEL (Lower Center Section - 1:1 Physical Parity)
    ========================================================================== */
 #main-control-panel {
-    display: grid;
-    grid-template-columns: 86px 86px 1fr 86px 86px;
-    gap: 12px;
-    align-items: start;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
 }
 
-.func-col {
+/* Dual-Row Mode Selection Matrix */
+.mode-matrix-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: var(--recessed-well);
+    border: 1px solid var(--chassis-border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.7);
+}
+
+.mode-matrix-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.section-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    color: #8c91a4;
+    letter-spacing: 2px;
+}
+
+.mode-matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    width: 100%;
+}
+
+/* Hardware Navigation, Banks & Jog Wheel Deck */
+.navigation-deck {
+    display: grid;
+    grid-template-columns: 104px 1fr 104px;
+    gap: 14px;
+    align-items: start;
+    width: 100%;
+}
+
+.nav-flank {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    background: var(--recessed-well);
+    border: 1px solid var(--chassis-border);
+    border-radius: 8px;
+    padding: 10px 8px;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.7);
+}
+
+.flank-title {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 700;
+    color: #626778;
+    letter-spacing: 1.5px;
+    text-align: center;
 }
 
 .hw-btn-nav {
-    height: 52px;
+    height: 48px;
 }
 
 .hw-btn-nav.active {
     border-color: #00d2ff;
     box-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+    background: linear-gradient(180deg, #1d3345 0%, #15202c 100%);
+}
+
+.hw-btn-shift {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.shift-led {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #3a3020;
+    margin-bottom: 2px;
+    transition: all 0.15s ease;
 }
 
 .hw-btn-shift.active {
@@ -1014,12 +1090,22 @@ body {
     background: linear-gradient(180deg, #443c22 0%, #2e2612 100%);
 }
 
+.hw-btn-shift.active .shift-led {
+    background: #e6a800;
+    box-shadow: 0 0 8px #e6a800;
+}
+
 /* Center Jog Wheel & Banks Cluster */
-.center-dial-cluster {
+.center-jog-cluster {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
+    background: var(--recessed-well);
+    border: 1px solid var(--chassis-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
 }
 
 .banks-header {
@@ -1037,7 +1123,7 @@ body {
 
 .banks-title {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
     color: #8c91a4;
     letter-spacing: 2px;
@@ -1046,12 +1132,46 @@ body {
 .bank-buttons-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 8px;
     width: 100%;
 }
 
 .hw-btn-bank {
-    height: 48px;
+    height: 44px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.bank-led {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #252834;
+    margin-bottom: 2px;
+    transition: all 0.15s ease;
+}
+
+.bank-led.led-cyan.active {
+    background: #00d2ff;
+    box-shadow: 0 0 8px #00d2ff;
+}
+
+.bank-led.led-amber.active {
+    background: #ff9900;
+    box-shadow: 0 0 8px #ff9900;
+}
+
+.bank-led.led-green.active {
+    background: #00ff66;
+    box-shadow: 0 0 8px #00ff66;
+}
+
+.bank-led.led-pink.active {
+    background: #ff00aa;
+    box-shadow: 0 0 8px #ff00aa;
 }
 
 .hw-btn-bank.active {
@@ -1060,41 +1180,68 @@ body {
     box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
 }
 
-/* Jog Wheel with 4 Quadrant Navigation Buttons */
+/* Jog Wheel with Surrounding Quadrant Navigation & Cursor D-Pad */
 .jog-quadrant-wrapper {
     position: relative;
-    width: 250px;
+    width: 330px;
     height: 250px;
     display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.quad-btn-top, .quad-middle-row, .quad-btn-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.hw-btn-corner {
+    width: 78px;
+    height: 48px;
+}
+
+/* Tactile Cursor D-Pad Navigation Buttons */
+.hw-btn-cursor {
+    width: 58px;
+    height: 48px;
+    background: linear-gradient(180deg, #2c303c 0%, #1c1e26 100%);
+    border: 1px solid #434757;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.15);
+    transition: all 0.08s ease;
 }
 
-.quad-btn-top {
-    position: absolute;
-    top: 4px;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
+.hw-btn-cursor:hover {
+    border-color: #00d2ff;
 }
 
-.quad-btn-bottom {
-    position: absolute;
-    bottom: 4px;
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
+.hw-btn-cursor:active, .hw-btn-cursor.pressed {
+    transform: scale(0.96);
+    background: #14161c;
+    border-color: #00d2ff;
+    box-shadow: 0 0 8px rgba(0,210,255,0.6);
 }
 
-.quad-btn-top button, .quad-btn-bottom button {
-    width: 58px;
-    height: 46px;
+.cursor-glyph {
+    font-size: 13px;
+    color: #00d2ff;
+    text-shadow: 0 0 4px rgba(0,210,255,0.4);
+    line-height: 1;
 }
 
 /* Central Jog Wheel Dial */
 .jog-wheel-outer {
-    width: 154px;
-    height: 154px;
+    width: 144px;
+    height: 144px;
     border-radius: 50%;
     background: radial-gradient(circle, #3a3d47 0%, #202228 65%, #101115 100%);
     border: 3px solid #4a4d5a;
@@ -1116,22 +1263,33 @@ body {
 
 .jog-dimple {
     position: absolute;
-    top: 22px;
-    width: 28px;
-    height: 28px;
+    top: 20px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
     background: radial-gradient(circle, #15161b 30%, #30333d 100%);
     box-shadow: inset 0 2px 5px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.2);
 }
 
 .jog-center-click {
-    width: 58px;
-    height: 58px;
+    width: 54px;
+    height: 54px;
     border-radius: 50%;
     background: radial-gradient(circle, #2f313a 0%, #1c1d22 100%);
     border: 1px solid #454752;
     box-shadow: 0 2px 6px rgba(0,0,0,0.7), inset 0 1px 1px rgba(255,255,255,0.2);
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.enter-glyph {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    font-weight: 700;
+    color: #8c91a4;
+    letter-spacing: 1px;
 }
 
 .jog-center-click:active {

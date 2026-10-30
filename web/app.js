@@ -433,6 +433,43 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-plus").addEventListener("click", () => rotateJogWheel(15));
     document.getElementById("btn-minus").addEventListener("click", () => rotateJogWheel(-15));
 
+    // Directional D-Pad Cursor Buttons
+    const btnCursorUp = document.getElementById("btn-cursor-up");
+    const btnCursorDown = document.getElementById("btn-cursor-down");
+    const btnCursorLeft = document.getElementById("btn-cursor-left");
+    const btnCursorRight = document.getElementById("btn-cursor-right");
+
+    function flashButton(btn) {
+        if (!btn) return;
+        btn.classList.add("pressed");
+        setTimeout(() => btn.classList.remove("pressed"), 120);
+    }
+
+    if (btnCursorUp) {
+        btnCursorUp.addEventListener("click", () => {
+            flashButton(btnCursorUp);
+            rotateJogWheel(15);
+        });
+    }
+    if (btnCursorDown) {
+        btnCursorDown.addEventListener("click", () => {
+            flashButton(btnCursorDown);
+            rotateJogWheel(-15);
+        });
+    }
+    if (btnCursorLeft) {
+        btnCursorLeft.addEventListener("click", () => {
+            flashButton(btnCursorLeft);
+            rotateJogWheel(-15);
+        });
+    }
+    if (btnCursorRight) {
+        btnCursorRight.addEventListener("click", () => {
+            flashButton(btnCursorRight);
+            rotateJogWheel(15);
+        });
+    }
+
     // --- Bank Selection Buttons (A, B, C, D / E, F, G, H with Shift) ---
     const bankButtons = [
         document.getElementById("btn-bank-a"),
@@ -446,6 +483,8 @@ document.addEventListener("DOMContentLoaded", () => {
         bankButtons.forEach((btn, idx) => {
             const isSelected = (state.currentBank % 4) === idx;
             btn.classList.toggle("active", isSelected);
+            const led = btn.querySelector(".bank-led");
+            if (led) led.classList.toggle("active", isSelected);
         });
 
         updatePadColors();
@@ -875,6 +914,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "[") rotateJogWheel(-15);
         else if (e.key === "]") rotateJogWheel(15);
         else if (e.key === "Enter") jogCenterBtn.click();
+
+        // Directional D-Pad Cursor Keys
+        if (e.key === "ArrowUp") { e.preventDefault(); btnCursorUp.click(); }
+        else if (e.key === "ArrowDown") { e.preventDefault(); btnCursorDown.click(); }
+        else if (e.key === "ArrowLeft") { e.preventDefault(); btnCursorLeft.click(); }
+        else if (e.key === "ArrowRight") { e.preventDefault(); btnCursorRight.click(); }
+        else if (e.key === "-" || e.key === "_") { e.preventDefault(); document.getElementById("btn-minus").click(); }
+        else if (e.key === "+" || e.key === "=") { e.preventDefault(); document.getElementById("btn-plus").click(); }
+        else if (e.key === "Backspace") { e.preventDefault(); document.getElementById("btn-back").click(); }
 
         // Touch Strip: T
         if (key === "t") setTouchStrip(Math.random());

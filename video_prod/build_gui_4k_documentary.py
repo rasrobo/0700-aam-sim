@@ -67,9 +67,10 @@ SCENES = [
         "narration": (
             "This is the physical Behringer KICK, BE 0700-AAM: an integrated standalone groovebox "
             "featuring a seven-inch color touchscreen, sixteen RGB velocity pads, four continuous Q-Link encoders, "
-            "and an analog capacitive touch strip. And this is 0700-AAM-SIM: our photorealistic, one-to-one "
-            "skeuomorphic software simulator running directly in your web browser with zero installation, zero drivers, "
-            "and zero hardware barriers."
+            "and a tactile navigation cluster. And this is 0700-AAM-SIM: our photorealistic, one-to-one "
+            "skeuomorphic software simulator running directly in your web browser with complete hardware button parity—"
+            "including the full mode matrix, bank select with status LEDs, and every physical button flanking the central "
+            "jog wheel: Back, Copy, Up, Down, Left, Right directional cursor keys, minus, and plus."
         ),
         "visual_key": "comparison"
     },
@@ -179,73 +180,148 @@ def generate_4k_scene_image(scene_info: Dict[str, Any], out_path: Path):
         # Right Card: Sovereign Web Simulator
         draw.rounded_rectangle([(1960, 260), (3740, H - 180)], radius=24, fill=CARD_BG, outline=CYAN_ACCENT, width=4)
         draw.text((2020, 310), "SOVEREIGN WEB SIMULATOR: 0700-AAM-SIM", font=get_font(42, bold=True), fill=CYAN_ACCENT)
-        draw.text((2020, 370), "1:1 Photorealistic Skeuomorphic Browser Interface (Zero Install)", font=get_font(28, bold=False), fill=TEXT_MUTED)
+        draw.text((2020, 370), "1:1 Photorealistic Skeuomorphic Browser Interface (1:1 Hardware Button Parity)", font=get_font(28, bold=False), fill=TEXT_MUTED)
 
         # Draw skeuomorphic simulator mock matching the exact physical layout
         # Outer chassis inside card
-        sim_chassis_rect = [(2020, 440), (3680, 1560)]
+        sim_chassis_rect = [(2000, 440), (3700, 1560)]
         draw.rounded_rectangle(sim_chassis_rect, radius=20, fill=(18, 22, 28), outline=(60, 70, 82), width=3)
 
-        # Inside simulator: 7" LCD display (left-center)
-        draw.rounded_rectangle([(2060, 480), (3000, 1020)], radius=16, fill=(10, 13, 17), outline=CYAN_ACCENT, width=3)
-        draw.text((2100, 520), "0700-AAM FIRMWARE OS v1.0.0", font=get_font(36, bold=True), fill=CYAN_ACCENT)
-        draw.text((2650, 520), "120.0 BPM  4/4", font=get_font(36, bold=True), fill=AMBER_ACCENT)
-
-        # Oscilloscope line
-        import math
-        points = []
-        for x in range(2100, 2960, 12):
-            y = 700 + int(90 * math.sin((x - 2100) * 0.04) * math.cos((x - 2100) * 0.012))
-            points.append((x, y))
-        draw.line(points, fill=GREEN_ACCENT, width=4)
-
-        # Tab buttons below display
-        tabs = ["MAIN", "GRID SEQ", "TRACK MIX", "SAMPLER", "PAD EDIT", "PREFS"]
-        for idx, t in enumerate(tabs):
-            bx = 2100 + idx * 140
-            draw.rounded_rectangle([(bx, 930), (bx + 130, 990)], radius=8, fill=(0, 60, 80) if idx == 0 else (25, 30, 38), outline=CYAN_ACCENT if idx == 0 else BORDER_COLOR)
-            draw.text((bx + 15, 948), t, font=get_font(20, bold=True), fill=CYAN_ACCENT if idx == 0 else TEXT_MUTED)
-
-        # 4 Q-Link knobs stacked on right side of display
-        draw.rounded_rectangle([(3040, 480), (3640, 1020)], radius=16, fill=PANEL_BG, outline=BORDER_COLOR, width=2)
-        draw.text((3080, 510), "Q-LINK ENCODERS", font=get_font(28, bold=True), fill=TEXT_WHITE)
-        qnames = [("Q1: CUTOFF", "850 Hz", CYAN_ACCENT), ("Q2: RESO", "42%", AMBER_ACCENT), ("Q3: DECAY", "1.2x", GREEN_ACCENT), ("Q4: TUNE", "+2 ST", PINK_ACCENT)]
-        for q_idx, (qlbl, qval, qcol) in enumerate(qnames):
-            qy = 570 + q_idx * 105
-            draw.ellipse([(3080, qy), (3160, qy + 80)], outline=qcol, width=4)
-            draw.ellipse([(3095, qy + 15), (3145, qy + 65)], fill=(35, 42, 52))
-            draw.text((3190, qy + 12), qlbl, font=get_font(26, bold=True), fill=TEXT_WHITE)
-            draw.text((3190, qy + 45), qval, font=get_font(24, bold=True), fill=qcol)
-
-        # 16 Pads in lower section
-        draw.rounded_rectangle([(2060, 1060), (3180, 1520)], radius=16, fill=PANEL_BG, outline=BORDER_COLOR, width=2)
-        draw.text((2100, 1080), "16 VELOCITY PADS (BANKS A-H = 128 PADS)", font=get_font(26, bold=True), fill=TEXT_WHITE)
+        # 1. LEFT: Touch Strip + 16 RGB Velocity Pads (x: 2020 to 2480)
+        # Touch Strip Ribbon
+        draw.rounded_rectangle([(2020, 480), (2045, 1260)], radius=6, fill=(10, 12, 16), outline=BORDER_COLOR)
+        draw.rectangle([(2025, 800), (2040, 840)], fill=CYAN_ACCENT)
+        # 16 Pads (4x4)
+        draw.rounded_rectangle([(2060, 480), (2480, 1260)], radius=14, fill=PANEL_BG, outline=BORDER_COLOR, width=2)
+        draw.text((2080, 500), "16 VELOCITY PADS", font=get_font(22, bold=True), fill=TEXT_WHITE)
+        pad_colors_row = [GREEN_ACCENT, AMBER_ACCENT, CYAN_ACCENT, (180, 100, 255)]
         for r in range(4):
             for c in range(4):
-                px = 2100 + c * 260
-                py = 1125 + r * 95
-                draw.rounded_rectangle([(px, py), (px + 245, py + 85)], radius=10, fill=(30, 36, 46), outline=GREEN_ACCENT if r == 3 else CYAN_ACCENT, width=2)
+                px = 2080 + c * 96
+                py = 540 + r * 140
+                pcol = pad_colors_row[3 - r]
+                draw.rounded_rectangle([(px, py), (px + 86, py + 120)], radius=8, fill=(28, 34, 44), outline=pcol, width=2)
                 pnum = (3 - r) * 4 + c + 1
-                draw.text((px + 20, py + 25), f"PAD {pnum}", font=get_font(24, bold=True), fill=TEXT_WHITE)
+                draw.text((px + 12, py + 15), f"P{pnum}", font=get_font(18, bold=True), fill=TEXT_WHITE)
+        # Pad utility buttons under pads
+        pad_utils = ["FULL LVL", "16 LVL", "ERASE"]
+        for u_idx, utxt in enumerate(pad_utils):
+            ux = 2080 + u_idx * 130
+            draw.rounded_rectangle([(ux, 1140), (ux + 115, 1200)], radius=6, fill=(25, 30, 38), outline=BORDER_COLOR)
+            draw.text((ux + 15, 1160), utxt, font=get_font(16, bold=True), fill=AMBER_ACCENT if u_idx < 2 else PINK_ACCENT)
 
-        # Jog Wheel & Transport in lower right
-        draw.rounded_rectangle([(3220, 1060), (3640, 1520)], radius=16, fill=PANEL_BG, outline=BORDER_COLOR, width=2)
-        draw.ellipse([(3350, 1100), (3510, 1260)], fill=(35, 42, 52), outline=CYAN_ACCENT, width=4)
-        draw.ellipse([(3410, 1160), (3450, 1200)], fill=(50, 60, 72))
-        draw.text((3365, 1280), "JOG WHEEL", font=get_font(24, bold=True), fill=TEXT_MUTED)
+        # 2. CENTER: 7" LCD Display + 2x5 Mode Matrix + 1:1 Jog Wheel Surround Bezel (x: 2500 to 3380)
+        # 7" LCD display (top-center)
+        draw.rounded_rectangle([(2500, 480), (3380, 880)], radius=14, fill=(10, 13, 17), outline=CYAN_ACCENT, width=3)
+        draw.text((2530, 505), "0700-AAM FIRMWARE OS v1.0.0", font=get_font(28, bold=True), fill=CYAN_ACCENT)
+        draw.text((3120, 505), "120.0 BPM", font=get_font(28, bold=True), fill=AMBER_ACCENT)
+        # Live Oscilloscope inside display
+        import math
+        points = []
+        for x in range(2530, 3350, 10):
+            y = 660 + int(70 * math.sin((x - 2530) * 0.04) * math.cos((x - 2530) * 0.015))
+            points.append((x, y))
+        draw.line(points, fill=GREEN_ACCENT, width=3)
+        # 6 View Tabs
+        tabs = ["MAIN", "GRID", "MIXER", "SAMPLE", "EDIT", "PREFS"]
+        for idx, t in enumerate(tabs):
+            bx = 2530 + idx * 135
+            draw.rounded_rectangle([(bx, 810), (bx + 125, 860)], radius=6, fill=(0, 60, 80) if idx == 0 else (22, 26, 34), outline=CYAN_ACCENT if idx == 0 else BORDER_COLOR)
+            draw.text((bx + 18, 825), t, font=get_font(18, bold=True), fill=CYAN_ACCENT if idx == 0 else TEXT_MUTED)
 
-        # Transport buttons
-        tb_list = [("REC", (255, 64, 64)), ("PLAY", GREEN_ACCENT), ("STOP", TEXT_WHITE)]
+        # 2x5 Mode Selection Matrix (directly beneath display)
+        draw.rounded_rectangle([(2500, 895), (3380, 1035)], radius=10, fill=PANEL_BG, outline=BORDER_COLOR, width=2)
+        modes_row1 = ["MAIN", "BROWSE", "TRK MIX", "TRK MUTE", "NEXT SEQ"]
+        modes_row2 = ["STEP SEQ", "TC", "SAMPLER", "SMP EDIT", "PROG EDIT"]
+        for m_idx, mtxt in enumerate(modes_row1):
+            mx = 2515 + m_idx * 170
+            draw.rounded_rectangle([(mx, 905), (mx + 160, 955)], radius=6, fill=(28, 33, 42), outline=CYAN_ACCENT if m_idx == 0 else BORDER_COLOR)
+            draw.text((mx + 20, 920), mtxt, font=get_font(18, bold=True), fill=TEXT_WHITE)
+        for m_idx, mtxt in enumerate(modes_row2):
+            mx = 2515 + m_idx * 170
+            draw.rounded_rectangle([(mx, 965), (mx + 160, 1015)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
+            draw.text((mx + 20, 980), mtxt, font=get_font(18, bold=True), fill=TEXT_WHITE)
+
+        # 1:1 Hardware Navigation Deck (Jog Wheel with Complete Flanking Cluster) (y: 1050 to 1540)
+        draw.rounded_rectangle([(2500, 1050), (3380, 1530)], radius=14, fill=PANEL_BG, outline=BORDER_COLOR, width=2)
+
+        # Left Flank: Timing (Tap Tempo / Note Repeat)
+        draw.rounded_rectangle([(2520, 1140), (2630, 1220)], radius=8, fill=(30, 36, 46), outline=CYAN_ACCENT, width=2)
+        draw.text((2530, 1165), "TAP TEMPO", font=get_font(16, bold=True), fill=TEXT_WHITE)
+        draw.rounded_rectangle([(2520, 1240), (2630, 1320)], radius=8, fill=(30, 36, 46), outline=BORDER_COLOR)
+        draw.text((2525, 1265), "NOTE REPEAT", font=get_font(15, bold=True), fill=TEXT_WHITE)
+
+        # Center: Banks Select Row (Banks A, B, C, D with LED pips)
+        banks_short = [("BANK A", CYAN_ACCENT), ("BANK B", AMBER_ACCENT), ("BANK C", GREEN_ACCENT), ("BANK D", PINK_ACCENT)]
+        for b_idx, (bname, bcol) in enumerate(banks_short):
+            bx = 2655 + b_idx * 135
+            draw.rounded_rectangle([(bx, 1065), (bx + 125, 1115)], radius=6, fill=(0, 45, 60) if b_idx == 0 else (24, 28, 36), outline=bcol, width=2 if b_idx == 0 else 1)
+            draw.ellipse([(bx + 15, 1083), (bx + 27, 1095)], fill=bcol)
+            draw.text((bx + 35, 1080), bname, font=get_font(16, bold=True), fill=TEXT_WHITE)
+
+        # Center: Massive Central Jog Wheel & Full Flanking Buttons (1:1 Parity)
+        # Top Row: BACK / UNDO (left), UP ▲ (center), COPY / PASTE (right)
+        draw.rounded_rectangle([(2665, 1130), (2775, 1190)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
+        draw.text((2685, 1150), "BACK", font=get_font(18, bold=True), fill=TEXT_WHITE)
+        draw.rounded_rectangle([(2885, 1130), (2975, 1190)], radius=6, fill=(24, 32, 42), outline=CYAN_ACCENT, width=2)
+        draw.text((2920, 1145), "▲", font=get_font(24, bold=True), fill=CYAN_ACCENT)
+        draw.rounded_rectangle([(3085, 1130), (3195, 1190)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
+        draw.text((3105, 1150), "COPY", font=get_font(18, bold=True), fill=TEXT_WHITE)
+
+        # Middle Row: LEFT ◄ (left), JOG WHEEL with dimple + ENTER (center), RIGHT ► (right)
+        draw.rounded_rectangle([(2785, 1240), (2845, 1330)], radius=6, fill=(24, 32, 42), outline=CYAN_ACCENT, width=2)
+        draw.text((2805, 1265), "◄", font=get_font(24, bold=True), fill=CYAN_ACCENT)
+
+        # Massive Jog Dial (center)
+        draw.ellipse([(2855, 1200), (3005, 1350)], fill=(35, 40, 50), outline=CYAN_ACCENT, width=4)
+        draw.ellipse([(2880, 1215), (2910, 1245)], fill=(20, 24, 30)) # finger dimple
+        draw.ellipse([(2900, 1245), (2960, 1305)], fill=(50, 58, 70), outline=(90, 100, 115)) # enter button
+        draw.text((2912, 1267), "ENTER", font=get_font(12, bold=True), fill=TEXT_WHITE)
+
+        draw.rounded_rectangle([(3015, 1240), (3075, 1330)], radius=6, fill=(24, 32, 42), outline=CYAN_ACCENT, width=2)
+        draw.text((3035, 1265), "►", font=get_font(24, bold=True), fill=CYAN_ACCENT)
+
+        # Bottom Row: - / DEC (left), DOWN ▼ (center), + / INC (right)
+        draw.rounded_rectangle([(2665, 1360), (2775, 1420)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
+        draw.text((2705, 1375), "-", font=get_font(26, bold=True), fill=TEXT_WHITE)
+        draw.rounded_rectangle([(2885, 1360), (2975, 1420)], radius=6, fill=(24, 32, 42), outline=CYAN_ACCENT, width=2)
+        draw.text((2920, 1375), "▼", font=get_font(24, bold=True), fill=CYAN_ACCENT)
+        draw.rounded_rectangle([(3085, 1360), (3195, 1420)], radius=6, fill=(28, 33, 42), outline=BORDER_COLOR)
+        draw.text((3125, 1375), "+", font=get_font(26, bold=True), fill=TEXT_WHITE)
+
+        # Right Flank: System (MENU / SHIFT)
+        draw.rounded_rectangle([(3230, 1140), (3340, 1220)], radius=8, fill=(30, 36, 46), outline=BORDER_COLOR)
+        draw.text((3255, 1165), "MENU", font=get_font(18, bold=True), fill=TEXT_WHITE)
+        draw.rounded_rectangle([(3230, 1240), (3340, 1320)], radius=8, fill=(45, 38, 24), outline=AMBER_ACCENT, width=2)
+        draw.ellipse([(3275, 1255), (3287, 1267)], fill=AMBER_ACCENT)
+        draw.text((3255, 1280), "SHIFT", font=get_font(18, bold=True), fill=AMBER_ACCENT)
+
+        # 3. RIGHT: 4 Q-Link Encoders + 5 Transport Buttons (x: 3410 to 3680)
+        draw.rounded_rectangle([(3410, 480), (3680, 1020)], radius=14, fill=PANEL_BG, outline=BORDER_COLOR, width=2)
+        draw.text((3430, 505), "4 Q-LINKS", font=get_font(22, bold=True), fill=TEXT_WHITE)
+        qnames = [("Q1", "850 Hz", CYAN_ACCENT), ("Q2", "42%", AMBER_ACCENT), ("Q3", "1.2x", GREEN_ACCENT), ("Q4", "+2 ST", PINK_ACCENT)]
+        for q_idx, (qlbl, qval, qcol) in enumerate(qnames):
+            qy = 550 + q_idx * 110
+            draw.ellipse([(3430, qy), (3500, qy + 70)], outline=qcol, width=3)
+            draw.ellipse([(3445, qy + 15), (3485, qy + 55)], fill=(35, 42, 52))
+            draw.text((3520, qy + 12), qlbl, font=get_font(20, bold=True), fill=TEXT_WHITE)
+            draw.text((3520, qy + 40), qval, font=get_font(18, bold=True), fill=qcol)
+
+        # 5 Transport Buttons
+        draw.rounded_rectangle([(3410, 1050), (3680, 1530)], radius=14, fill=PANEL_BG, outline=BORDER_COLOR, width=2)
+        draw.text((3430, 1070), "TRANSPORT", font=get_font(20, bold=True), fill=TEXT_WHITE)
+        tb_list = [("REC", (255, 64, 64)), ("OVERDUB", AMBER_ACCENT), ("STOP", TEXT_WHITE), ("PLAY", GREEN_ACCENT), ("PLAY START", GREEN_ACCENT)]
         for t_idx, (tlbl, tcol) in enumerate(tb_list):
-            tx = 3250 + t_idx * 125
-            draw.rounded_rectangle([(tx, 1340), (tx + 115, 1420)], radius=10, fill=(28, 33, 42), outline=tcol, width=3)
-            draw.text((tx + 25, 1365), tlbl, font=get_font(26, bold=True), fill=tcol)
+            ty = 1110 + t_idx * 78
+            draw.rounded_rectangle([(3430, ty), (3660, ty + 65)], radius=8, fill=(28, 33, 42), outline=tcol, width=2)
+            draw.ellipse([(3445, ty + 25), (3457, ty + 37)], fill=tcol)
+            draw.text((3470, ty + 20), tlbl, font=get_font(20, bold=True), fill=tcol)
 
         # Right feature callouts
         sim_callouts = [
-            "✓ Instant 1-Click Browser Execution", "✓ Zero Dependencies & Zero Compilation",
-            "✓ Procedural Web Audio Sound Engine", "✓ Binary ComProtocol WebSocket Bridge",
-            "✓ 100% Passing CI Regression Harness", "✓ AGPLv3 Sovereign Open Source"
+            "✓ 1:1 Hardware Button Parity (Jog & Cursors)", "✓ Instant 1-Click Zero-Install Web Execution",
+            "✓ Full 2x5 Mode Matrix & 8 Pad Banks", "✓ Procedural Web Audio Zero-Latency Synth",
+            "✓ Binary ComProtocol WebSocket Bridge", "✓ AGPLv3 Sovereign Open Source"
         ]
         for s_idx, scallout in enumerate(sim_callouts):
             sx = 2020 + (s_idx % 2) * 850
@@ -494,8 +570,8 @@ def main():
     yt_cmd = (
         "~/install-recordings/youtube/youtube-auth-upload.sh "
         "/tmp/0700_aam_gui_showcase_4k.mp4 "
-        "\"0700-AAM Sovereign Web Hardware Simulator (4K Demo & Walkthrough)\" "
-        "--desc \"Walkthrough of the 0700-AAM Sovereign Web Simulator in 4K Ultra HD. 1:1 photorealistic skeuomorphic hardware simulation of the BE 0700-AAM groovebox with procedural Web Audio synthesis, 6-view touchscreen operating interface, 128 virtual pads (Banks A-H), knurled Q-Link encoders, and binary ComProtocol WebSocket bridge.\n\nLive 1-Click Web Demo: https://rasrobo.github.io/0700-aam-sim/\nGitHub Repository: https://github.com/rasrobo/0700-aam-sim\n\nMusic: 'The Complex' by Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License (http://creativecommons.org/licenses/by/4.0/)\nIndependent simulator; not affiliated with Music Tribe / Behringer.\" "
+        "\"0700-AAM Sovereign Web Hardware Simulator (1:1 Hardware Parity & 4K Demo)\" "
+        "--desc \"Walkthrough of the 0700-AAM Sovereign Web Simulator in 4K Ultra HD featuring 1:1 physical control surface parity with the BE 0700-AAM groovebox. Complete hardware button matrix including directional D-Pad cursors around the central jog wheel, Back/Undo, Copy/Paste, +/- increment buttons, Bank Select with illuminated status LEDs, procedural Web Audio synthesis, 6-view touchscreen operating interface, 128 virtual pads, knurled Q-Link encoders, and binary ComProtocol WebSocket bridge.\n\nLive 1-Click Web Demo: https://rasrobo.github.io/0700-aam-sim/\nGitHub Repository: https://github.com/rasrobo/0700-aam-sim\n\nMusic: 'The Complex' by Kevin MacLeod (incompetech.com)\nLicensed under Creative Commons: By Attribution 4.0 License (http://creativecommons.org/licenses/by/4.0/)\nIndependent simulator; not affiliated with Music Tribe / Behringer.\" "
         "--tags \"0700-aam,groovebox,synthesizer,4k,web-audio,simulator,musictribe,firmware,hardware-simulation,juce,cpp\""
     )
     result = subprocess.run(["ssh", "gpu.sqs.chat", yt_cmd], capture_output=True, text=True, check=True)
