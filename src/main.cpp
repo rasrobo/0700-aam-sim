@@ -24,6 +24,8 @@
 #include <csignal>
 #include <thread>
 #include <chrono>
+#include <termios.h>
+#include <unistd.h>
 
 using namespace thumpbox;
 
@@ -32,6 +34,30 @@ static std::atomic<bool> g_shutdown{false};
 static void sigint_handler(int) {
     g_shutdown = true;
 }
+
+struct TerminalRawMode {
+    struct termios orig_termios{};
+    bool enabled{false};
+
+    TerminalRawMode() {
+        if (isatty(STDIN_FILENO)) {
+            if (tcgetattr(STDIN_FILENO, &orig_termios) == 0) {
+                struct termios raw = orig_termios;
+                raw.c_lflag &= ~(ECHO | ICANON);
+                raw.c_cc[VMIN] = 0;
+                raw.c_cc[VTIME] = 1; // 100ms read timeout
+                tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+                enabled = true;
+            }
+        }
+    }
+
+    ~TerminalRawMode() {
+        if (enabled) {
+            tcsetattr(STDIN_FILENO, TCSANOW, &orig_termios);
+        }
+    }
+};
 
 static void print_usage(const char* prog) {
     std::cout << "Usage: " << prog << " [options]\n\n"
@@ -46,45 +72,57 @@ static void print_usage(const char* prog) {
               << "  --help                          Display this help message\n";
 }
 
-static void render_cli_dashboard(const hardware::VirtualDevice& dev) {
+static void render_cli_dashboard(const hardware::VirtualDevice& dev, uint8_t active_qlink) {
     std::cout << "\033[2J\033[H"; // Clear screen & home
     std::cout << "========================================================\n"
               << "              thumpbox-sim Virtual Device               \n"
               << "========================================================\n\n";
 
     // Banks & QLinks
-    std::cout << "Active Bank: [" << static_cast<char>('A' + dev.get_active_bank()) << "]\n";
-    std::cout << "Q-Link Knobs: ";
+    std::cout << "Active Bank: [" << static_cast<char>('A' + dev.get_active_bank()) << "]  (Switch: Shift+A..H)\n";
+    std::cout << "Q-Link Knobs (Active: P" << (active_qlink + 1) << ", Select: 7/8/9/0, Turn: [ / ]):\n  ";
     for (size_t i = 0; i < hardware::NUM_QLINKS; ++i) {
-        std::cout << "P" << (i + 1) << ":" << static_cast<int>(dev.get_qlink_value(i)) << "  ";
+        if (i == active_qlink) {
+            std::cout << "\033[1;36m*P" << (i + 1) << ":" << static_cast<int>(dev.get_qlink_value(i)) << "*\033[0m  ";
+        } else {
+            std::cout << " P" << (i + 1) << ":" << static_cast<int>(dev.get_qlink_value(i)) << "   ";
+        }
     }
-    std::cout << "\nTouch Slider: " << static_cast<int>(dev.get_slider_position())
+    std::cout << "\n\nTouch Slider (Touch: t / Release: y): "
+              << static_cast<int>(dev.get_slider_position())
               << " (Touched: " << (dev.is_slider_touched() ? "YES" : "NO")
-              << ", LED: " << static_cast<int>(dev.get_slider_led_level()) << "%)\n\n";
+              << ", Feedback LED: " << static_cast<int>(dev.get_slider_led_level()) << "%)\n\n";
 
     // 4x4 Pad Grid for active bank
-    std::cout << "Pads (Bank " << static_cast<char>('A' + dev.get_active_bank()) << "):\n";
+    std::cout << "Pads (Bank " << static_cast<char>('A' + dev.get_active_bank()) << " - Keys 1-4, Q-R, A-F, Z-V):\n";
+    const char* key_labels[4][4] = {
+        {"1", "2", "3", "4"},
+        {"q", "w", "e", "r"},
+        {"a", "s", "d", "f"},
+        {"z", "x", "c", "v"}
+    };
     for (int row = 3; row >= 0; --row) {
         std::cout << "  ";
         for (int col = 0; col < 4; ++col) {
             int pad_idx = row * 4 + col;
             auto pad = dev.get_active_pad_state(pad_idx);
             if (pad.pressed) {
-                std::cout << "[\033[1;32mPAD " << (pad_idx + 1) << " (V:" << static_cast<int>(pad.velocity) << ")\033[0m] ";
+                std::cout << "[\033[1;32m" << key_labels[3 - row][col] << ":P" << (pad_idx + 1) << "\033[0m] ";
             } else {
-                std::cout << "[ PAD " << (pad_idx + 1) << " ] ";
+                std::cout << "[ " << key_labels[3 - row][col] << ":P" << (pad_idx + 1) << " ] ";
             }
         }
         std::cout << "\n";
     }
 
-    std::cout << "\nTransport: "
-              << "REC:" << (dev.is_button_pressed(protocol::ButtonId::Record) ? "ON " : "OFF ")
-              << "PLAY:" << (dev.is_button_pressed(protocol::ButtonId::Play) ? "ON " : "OFF ")
-              << "STOP:" << (dev.is_button_pressed(protocol::ButtonId::Stop) ? "ON " : "OFF ")
+    std::cout << "\nJog Wheel (CCW: < / CW: > / Push: Enter) | Gesture Inject: g\n"
+              << "Transport (Space: Play | R: Rec | S: Stop):\n  "
+              << "REC:" << (dev.is_button_pressed(protocol::ButtonId::Record) ? "\033[1;31mON \033[0m" : "OFF ")
+              << "PLAY:" << (dev.is_button_pressed(protocol::ButtonId::Play) ? "\033[1;32mON \033[0m" : "OFF ")
+              << "STOP:" << (dev.is_button_pressed(protocol::ButtonId::Stop) ? "\033[1;33mON \033[0m" : "OFF ")
               << "SHIFT:" << (dev.is_button_pressed(protocol::ButtonId::Shift) ? "ON " : "OFF ")
               << "\n========================================================\n"
-              << "Press Ctrl+C to exit.\n";
+              << "Press Ctrl+C or 'x' while stopped to exit.\n";
 }
 
 int main(int argc, char** argv) {
@@ -194,11 +232,122 @@ int main(int argc, char** argv) {
         std::cout << "[thumpbox-sim] Symlink created at: " << symlink_path << "\n";
     }
 
+    uint8_t active_qlink = 0;
+    std::unique_ptr<TerminalRawMode> raw_mode;
+    if (interactive) {
+        raw_mode = std::make_unique<TerminalRawMode>();
+    }
+
+    uint8_t current_gesture_idx = 1;
+
     while (!g_shutdown) {
         if (interactive) {
-            render_cli_dashboard(device);
+            render_cli_dashboard(device, active_qlink);
+
+            char ch = 0;
+            if (read(STDIN_FILENO, &ch, 1) > 0) {
+                // Pad mappings (velocity 127)
+                int pad_hit = -1;
+                switch (ch) {
+                    // Row 4
+                    case '1': pad_hit = 12; break;
+                    case '2': pad_hit = 13; break;
+                    case '3': pad_hit = 14; break;
+                    case '4': pad_hit = 15; break;
+                    // Row 3
+                    case 'q': pad_hit = 8; break;
+                    case 'w': pad_hit = 9; break;
+                    case 'e': pad_hit = 10; break;
+                    case 'r': pad_hit = 11; break;
+                    // Row 2
+                    case 'a': pad_hit = 4; break;
+                    case 's': pad_hit = 5; break;
+                    case 'd': pad_hit = 6; break;
+                    case 'f': pad_hit = 7; break;
+                    // Row 1
+                    case 'z': pad_hit = 0; break;
+                    case 'x': pad_hit = 1; break;
+                    case 'c': pad_hit = 2; break;
+                    case 'v': pad_hit = 3; break;
+
+                    // Q-Link selection
+                    case '7': active_qlink = 0; break;
+                    case '8': active_qlink = 1; break;
+                    case '9': active_qlink = 2; break;
+                    case '0': active_qlink = 3; break;
+                    case '[': device.turn_qlink(active_qlink, -5); break;
+                    case ']': device.turn_qlink(active_qlink, +5); break;
+
+                    // Jog wheel
+                    case '<':
+                    case ',': device.turn_jog_wheel(-1); break;
+                    case '>':
+                    case '.': device.turn_jog_wheel(+1); break;
+                    case '\n':
+                    case '\r':
+                        device.press_jog_wheel();
+                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                        device.release_jog_wheel();
+                        break;
+
+                    // Slider
+                    case 't': device.touch_slider((device.get_slider_position() + 20) % 128); break;
+                    case 'y': device.release_slider(); break;
+
+                    // Transport
+                    case ' ':
+                        if (device.is_button_pressed(protocol::ButtonId::Play)) {
+                            device.release_button(protocol::ButtonId::Play);
+                        } else {
+                            device.press_button(protocol::ButtonId::Play);
+                        }
+                        break;
+                    case 'R':
+                        if (device.is_button_pressed(protocol::ButtonId::Record)) {
+                            device.release_button(protocol::ButtonId::Record);
+                        } else {
+                            device.press_button(protocol::ButtonId::Record);
+                        }
+                        break;
+                    case 'S':
+                        device.press_button(protocol::ButtonId::Stop);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                        device.release_button(protocol::ButtonId::Stop);
+                        break;
+
+                    // Banks A..H
+                    case 'A': device.select_bank(0); break;
+                    case 'B': device.select_bank(1); break;
+                    case 'C': device.select_bank(2); break;
+                    case 'D': device.select_bank(3); break;
+                    case 'E': device.select_bank(4); break;
+                    case 'F': device.select_bank(5); break;
+                    case 'G': device.select_bank(6); break;
+                    case 'H': device.select_bank(7); break;
+
+                    // Gesture injection
+                    case 'g': {
+                        auto g = static_cast<hardware::GestureType>(current_gesture_idx);
+                        device.inject_camera_gesture(g, 95);
+                        current_gesture_idx = (current_gesture_idx % 7) + 1;
+                        break;
+                    }
+
+                    case 3: // Ctrl+C
+                        g_shutdown = true;
+                        break;
+                }
+
+                if (pad_hit >= 0) {
+                    device.press_pad(pad_hit, 127);
+                    render_cli_dashboard(device, active_qlink);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(40));
+                    device.release_pad(pad_hit);
+                }
+            }
+        } else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
     std::cout << "\n[thumpbox-sim] Shutting down simulator...\n";
