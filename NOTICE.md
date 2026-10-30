@@ -1,6 +1,6 @@
 # Notice
 
-This project, `thumpbox-sim`, is an independent simulator and test harness for the BE 0700-AAM embedded firmware protocol.
+This project, `0700-aam-sim` (formerly `thumpbox-sim`), is an independent simulator and test harness for the BE 0700-AAM embedded firmware protocol.
 
 This repository references and builds upon code and protocol specifications from the upstream repository:
 - **Upstream Repository**: https://github.com/MusicTribeOpenSource/0700-AAM

@@ -1,8 +1,8 @@
-# thumpbox-sim
+# 0700-aam-sim (thumpbox-sim)
 
 A desktop simulator, virtual device harness, and headless test suite for the BE 0700-AAM embedded firmware hardware communication protocol.
 
-`thumpbox-sim` emulates the physical control surface and hardware subsystems over POSIX pseudo-terminals (`pty`), Unix domain sockets, or TCP sockets. It allows firmware and application logic to develop, test, and run automated regression suites headlessly without physical hardware attached.
+`0700-aam-sim` emulates the physical control surface and hardware subsystems over POSIX pseudo-terminals (`pty`), Unix domain sockets, or TCP sockets. It allows firmware and application logic to develop, test, and run automated regression suites headlessly without physical hardware attached.
 
 ---
 
