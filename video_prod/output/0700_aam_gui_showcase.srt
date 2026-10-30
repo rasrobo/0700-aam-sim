@@ -1,0 +1,35 @@
+1
+00:00:00,100 --> 00:00:11,400
+Welcome to the 0700-AAM Sovereign Web Simulator: a photorealistic one-to-one hardware groovebox simulator running entirely inside any modern web browser.
+
+2
+00:00:11,350 --> 00:00:25,575
+Modeled with meticulous physical precision after the BE 0700-AAM architecture, it delivers an authentic tactile control surface with zero native dependencies, zero build steps, and zero hardware barriers.
+
+3
+00:00:26,232 --> 00:00:33,869
+At the center is an eight-hundred-by-four-hundred-and-eighty high-contrast touchscreen interface featuring six dedicated functional views.
+
+4
+00:00:33,819 --> 00:00:49,582
+From the Main Sequencer and live audio oscilloscope, to the 16-by-16 Step Sequencer grid with running playhead cursor, sixteen-channel Track Mixer with live peak VU metering, Sampler waveform display, and Pad Filter Envelope editing.
+
+5
+00:00:50,252 --> 00:00:57,314
+Built directly into the simulator is a zero-latency procedural sound engine powered by the Web Audio API.
+
+6
+00:00:57,264 --> 00:01:14,239
+Strike any of the sixteen pads across Banks A through H to trigger dynamic pitch-enveloped 808 kicks, dual-body noise snares, metallic six-oscillator hi-hats, hand claps, toms, and tuned resonant analog sub-bass, with full keyboard hotkey support.
+
+7
+00:01:14,896 --> 00:01:22,146
+For embedded firmware developers, the simulator embeds a wire-accurate binary ComProtocol WebSocket bridge.
+
+8
+00:01:22,096 --> 00:01:30,646
+Every pad strike, knob rotation, and transport command is framed into standard MT packets and verified in continuous integration.
+
+9
+00:01:30,646 --> 00:01:43,121
+It is one hundred percent open source under AGPL version three, and live right now on GitHub Pages at rasrobo.github.io/0700-aam-sim.
