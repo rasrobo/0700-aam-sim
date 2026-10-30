@@ -4,6 +4,11 @@ A desktop simulator, virtual device harness, and headless test suite for the BE 
 
 `0700-aam-sim` emulates the physical control surface and hardware subsystems over POSIX pseudo-terminals (`pty`), Unix domain sockets, or TCP sockets. It allows firmware and application logic to develop, test, and run automated regression suites headlessly without physical hardware attached.
 
+[![Watch Video Demo](https://img.youtube.com/vi/Twt-MhPzib8/hqdefault.jpg)](https://youtu.be/Twt-MhPzib8)
+
+🎥 **[Watch the Video Documentary & Demonstration on YouTube](https://youtu.be/Twt-MhPzib8)** (Unlisted)
+
+
 ---
 
 ## Features

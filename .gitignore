@@ -25,3 +25,8 @@ compile_commands.json
 # Golden test output artifacts
 test_output/
 *.actual.json
+
+# Video production artifacts
+video_prod/clips/
+video_prod/output/*.mp4
+

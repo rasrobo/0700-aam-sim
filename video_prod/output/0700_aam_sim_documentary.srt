@@ -1,0 +1,47 @@
+1
+00:00:00,100 --> 00:00:15,750
+When Music Tribe open-sourced the firmware for the Behringer KICK, BE 0700-AAM, it came with one critical catch: the software was tightly coupled to physical hardware, relying on proprietary modules and custom serial drivers.
+
+2
+00:00:15,700 --> 00:00:21,637
+Without the physical groovebox on your desk, developing or testing was virtually impossible.
+
+3
+00:00:21,637 --> 00:00:31,887
+Enter 0700-AAM-SIM: a zero-dependency desktop simulator and virtual hardware harness built in modern C++17.
+
+4
+00:00:32,544 --> 00:00:38,556
+At the heart of the system is a wire-accurate implementation of Music Tribe's binary ComProtocol.
+
+5
+00:00:38,506 --> 00:00:45,794
+Every single packet header, command ID, and CRC-8 checksum is deterministically emulated.
+
+6
+00:00:45,794 --> 00:00:59,094
+Using our headless scenario runner, complex musical performances can be replayed and verified against golden state traces in CI pipelines, with four out of four unit test suites passing in less than two tenths of a second.
+
+7
+00:00:59,756 --> 00:01:06,043
+0700-AAM-SIM models the complete physical control surface.
+
+8
+00:01:05,993 --> 00:01:17,656
+Sixteen velocity-sensitive RGB pads across eight banks, four assignable Q-Link continuous encoders, the central jog wheel, capacitive touch strip, and transport controls.
+
+9
+00:01:17,656 --> 00:01:29,193
+It even includes synthetic gesture injection for the AI camera, CV gate output logging, and virtual pseudo-terminals, allowing the real firmware application to connect unmodified.
+
+10
+00:01:29,848 --> 00:01:39,535
+Licensed under AGPL version three or later, 0700-AAM-SIM brings true independence to the embedded audio community.
+
+11
+00:01:39,485 --> 00:01:49,510
+Whether you are hacking the firmware, creating custom sequencing algorithms, or running automated test suites, you can now build and iterate entirely in software.
+
+12
+00:01:49,510 --> 00:01:54,510
+Clean code, deterministic tests, and zero hardware barriers.

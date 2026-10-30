@@ -10,7 +10,7 @@ cd "${REPO_ROOT}"
 # Ensure upstream is present
 if [ ! -d "${REPO_ROOT}/upstream/.git" ] && [ ! -f "${REPO_ROOT}/upstream/.git" ]; then
     echo "Submodule not initialized. Running fetch_upstream.sh..."
-    sh "${REPO_ROOT}/scripts/fetch_upstream.sh"
+    bash "${REPO_ROOT}/scripts/fetch_upstream.sh"
 fi
 
 BUILD_DIR="${REPO_ROOT}/build"
