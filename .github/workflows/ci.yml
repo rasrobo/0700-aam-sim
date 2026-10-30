@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build build-essential
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -S . -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          cmake --build build
+
+      - name: Run CTest Suite
+        run: |
+          ctest --test-dir build --output-on-failure
+
+      - name: Run Scenario Golden Verification
+        run: |
+          ./build/thumpbox-sim --scenario tests/scenarios/pad_and_knob_flow.json --assert-golden tests/golden/pad_and_knob_flow.golden.json

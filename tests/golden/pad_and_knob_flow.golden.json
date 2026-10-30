@@ -1,0 +1,81 @@
+{
+  "scenario_name": "Pad Knob and Hardware Control Flow",
+  "emitted_packets": [
+    {
+      "type": "BUTTON",
+      "dir": "REQUEST",
+      "cmd": 0,
+      "data": [1, 1]
+    },
+    {
+      "type": "PAD",
+      "dir": "REQUEST",
+      "cmd": 0,
+      "data": [0, 1, 120, 1]
+    },
+    {
+      "type": "PAD",
+      "dir": "REQUEST",
+      "cmd": 0,
+      "data": [0, 0, 0, 1]
+    },
+    {
+      "type": "KNOBS",
+      "dir": "REQUEST",
+      "cmd": 1,
+      "data": [0, 1, 15, 15]
+    },
+    {
+      "type": "SLIDER",
+      "dir": "REQUEST",
+      "cmd": 0,
+      "data": [1, 90]
+    },
+    {
+      "type": "BUTTON",
+      "dir": "REQUEST",
+      "cmd": 0,
+      "data": [42, 1]
+    },
+    {
+      "type": "SYSTEM",
+      "dir": "REQUEST",
+      "cmd": 128,
+      "data": [3, 98]
+    }
+  ],
+  "final_state": {
+    "active_bank": 1,
+    "cv_outputs": [
+      {
+        "channel": 0,
+        "gate": true,
+        "voltage": 10.0
+      },
+      {
+        "channel": 1,
+        "gate": false,
+        "voltage": 0.0
+      },
+      {
+        "channel": 2,
+        "gate": false,
+        "voltage": 0.0
+      },
+      {
+        "channel": 3,
+        "gate": false,
+        "voltage": 0.0
+      }
+    ],
+    "qlinks": [
+      15,
+      0,
+      0,
+      0
+    ],
+    "slider_led_level": 0,
+    "slider_position": 90,
+    "slider_touched": true
+  }
+}

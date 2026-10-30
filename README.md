@@ -105,7 +105,7 @@ The simulator prints the slave PTY device path (e.g. `/dev/pts/3`). You can conf
 Execute a deterministic test scenario script:
 
 ```bash
-./build/thumpbox-sim --scenario tests/scenarios/pad_and_knob_flow.json --assert-golden
+./build/thumpbox-sim --scenario tests/scenarios/pad_and_knob_flow.json --assert-golden tests/golden/pad_and_knob_flow.golden.json
 ```
 
 ---

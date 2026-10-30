@@ -1,0 +1,82 @@
+{
+  "name": "Pad Knob and Hardware Control Flow",
+  "steps": [
+    {
+      "type": "action",
+      "action": "select_bank",
+      "bank": 1
+    },
+    {
+      "type": "action",
+      "action": "press_pad",
+      "pad": 0,
+      "velocity": 120
+    },
+    {
+      "type": "action",
+      "action": "release_pad",
+      "pad": 0
+    },
+    {
+      "type": "action",
+      "action": "turn_qlink",
+      "knob": 0,
+      "ticks": 15
+    },
+    {
+      "type": "action",
+      "action": "touch_slider",
+      "position": 90
+    },
+    {
+      "type": "action",
+      "action": "press_button",
+      "button": "Record"
+    },
+    {
+      "type": "action",
+      "action": "host_send_packet",
+      "pkt_type": "Pad",
+      "cmd": 1,
+      "data": [0, 1, 12]
+    },
+    {
+      "type": "action",
+      "action": "host_send_packet",
+      "pkt_type": "Cv",
+      "cmd": 0,
+      "data": [0, 255, 255, 1]
+    },
+    {
+      "type": "action",
+      "action": "inject_gesture",
+      "gesture": "SwipeLeft",
+      "confidence": 98
+    },
+    {
+      "type": "assertion",
+      "assert": "active_bank",
+      "expected": 1
+    },
+    {
+      "type": "assertion",
+      "assert": "pad_state",
+      "bank": 1,
+      "pad": 0,
+      "color_id": 12
+    },
+    {
+      "type": "assertion",
+      "assert": "qlink_value",
+      "knob": 0,
+      "expected": 15
+    },
+    {
+      "type": "assertion",
+      "assert": "cv_output",
+      "channel": 0,
+      "gate": true,
+      "voltage_approx": 10.0
+    }
+  ]
+}
