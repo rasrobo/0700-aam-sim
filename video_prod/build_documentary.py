@@ -206,7 +206,7 @@ def main():
         subtitles_srt=audio["master_srt"],
         output_mp4=final_mp4,
         total_duration=total_duration,
-        burn_subtitles=True
+        burn_subtitles=False
     )
 
     srt_out = OUTPUT_DIR / "0700_aam_sim_documentary.srt"
