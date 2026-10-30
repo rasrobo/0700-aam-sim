@@ -13,6 +13,9 @@
 
 #include "thumpbox/protocol.hpp"
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <cassert>
 #include <iostream>
 #include <vector>

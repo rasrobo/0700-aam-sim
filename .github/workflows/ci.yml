@@ -35,4 +35,4 @@ jobs:
 
       - name: Run Scenario Golden Verification
         run: |
-          ./build/thumpbox-sim --scenario tests/scenarios/pad_and_knob_flow.json --assert-golden tests/golden/pad_and_knob_flow.golden.json
+          ./build/0700-aam-sim --scenario tests/scenarios/pad_and_knob_flow.json --assert-golden tests/golden/pad_and_knob_flow.golden.json

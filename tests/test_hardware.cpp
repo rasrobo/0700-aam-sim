@@ -14,6 +14,9 @@
 #include "thumpbox/hardware.hpp"
 #include "thumpbox/transport.hpp"
 
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <cassert>
 #include <iostream>
 
