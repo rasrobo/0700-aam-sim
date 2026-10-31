@@ -135,9 +135,10 @@ body {
 .top-actions {
     display: flex;
     gap: 8px;
+    align-items: center;
 }
 
-.top-actions button {
+.top-actions button, .top-actions a {
     background: #252730;
     color: var(--screen-text);
     border: 1px solid var(--chassis-border);
@@ -146,12 +147,39 @@ body {
     font-size: 11px;
     font-family: var(--font-mono);
     cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     transition: all 0.15s ease;
 }
 
-.top-actions button:hover {
+.top-actions button:hover, .top-actions a:hover {
     background: #343744;
     border-color: #00d2ff;
+}
+
+.top-actions .btn-video {
+    background: linear-gradient(135deg, rgba(255, 51, 68, 0.15) 0%, rgba(200, 20, 40, 0.25) 100%);
+    border-color: rgba(255, 51, 68, 0.6);
+    color: #ff99aa;
+    font-weight: 700;
+}
+
+.top-actions .btn-video:hover {
+    background: linear-gradient(135deg, #ff2233 0%, #cc0022 100%);
+    border-color: #ff6677;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(255, 51, 68, 0.6);
+}
+
+.top-actions .btn-video .icon-yt {
+    fill: #ff3344;
+    transition: fill 0.15s ease;
+}
+
+.top-actions .btn-video:hover .icon-yt {
+    fill: #ffffff;
 }
 
 /* --- Hardware Chassis --- */
@@ -989,9 +1017,10 @@ body {
     margin-top: 16px;
     display: flex;
     gap: 12px;
+    align-items: center;
 }
 
-.prefs-buttons button {
+.prefs-buttons button, .prefs-buttons a {
     background: #252834;
     border: 1px solid #00d2ff;
     color: #fff;
@@ -1000,6 +1029,24 @@ body {
     font-family: var(--font-mono);
     font-size: 11px;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.prefs-buttons a.prefs-btn-video {
+    border-color: #ff3344;
+    color: #ff8899;
+    background: rgba(255, 51, 68, 0.15);
+    font-weight: 700;
+}
+
+.prefs-buttons a.prefs-btn-video:hover {
+    background: #ff3344;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(255, 51, 68, 0.6);
 }
 
 /* ==========================================================================
