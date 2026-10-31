@@ -429,9 +429,17 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => jogCenterBtn.style.background = "", 150);
     });
 
-    // Plus & Minus Buttons
+    // Plus, Minus & D-Pad Cursor Buttons
     document.getElementById("btn-plus").addEventListener("click", () => rotateJogWheel(15));
     document.getElementById("btn-minus").addEventListener("click", () => rotateJogWheel(-15));
+    const btnCurUp = document.getElementById("btn-cursor-up");
+    const btnCurDown = document.getElementById("btn-cursor-down");
+    const btnCurLeft = document.getElementById("btn-cursor-left");
+    const btnCurRight = document.getElementById("btn-cursor-right");
+    if (btnCurUp) btnCurUp.addEventListener("click", () => rotateJogWheel(15));
+    if (btnCurDown) btnCurDown.addEventListener("click", () => rotateJogWheel(-15));
+    if (btnCurLeft) btnCurLeft.addEventListener("click", () => rotateJogWheel(-15));
+    if (btnCurRight) btnCurRight.addEventListener("click", () => rotateJogWheel(15));
 
     // --- Bank Selection Buttons (A, B, C, D / E, F, G, H with Shift) ---
     const bankButtons = [

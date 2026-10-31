@@ -195,43 +195,53 @@ body {
 .screw-bl { bottom: 10px; left: 10px; }
 .screw-br { bottom: 10px; right: 10px; }
 
-/* 3-Column Layout */
+/* 2-Tier Hardware Architecture (1:1 Physical Parity) */
 #device-layout {
-    display: grid;
-    grid-template-columns: 460px 1fr 140px;
-    gap: 24px;
-    align-items: start;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
 }
 
 /* ==========================================================================
-   LEFT COLUMN: Master/Rec Knobs, Touch Strip, Pad Mode, 4x4 Pads
+   UPPER DECK: Master/Rec Knobs, 7" LCD Touchscreen (800x480), and 4 Q-Links
    ========================================================================== */
-#col-left {
+#deck-upper {
     display: flex;
-    flex-direction: column;
-    gap: 16px;
+    gap: 20px;
+    align-items: stretch;
+    width: 100%;
 }
 
-.col-header {
+#deck-upper-left {
     display: flex;
+    flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 4px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    width: 110px;
+    padding: 10px 4px;
+    background: var(--recessed-well);
+    border: 1px solid var(--chassis-border);
+    border-radius: 8px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
 }
 
 .brand-subtle {
     font-family: var(--font-mono);
     font-weight: 800;
-    font-size: 16px;
+    font-size: 14px;
     letter-spacing: 2px;
     color: #8f94a5;
     text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+    text-align: center;
 }
 
 .analog-pots {
     display: flex;
-    gap: 20px;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+    width: 100%;
 }
 
 .pot-module {
@@ -984,36 +994,97 @@ body {
 }
 
 /* ==========================================================================
-   MAIN CONTROL PANEL (Lower Center Section - 1:1 Physical Parity)
+   LOWER DECK: 1:1 Physical Architecture
+   Left: Touch Strip + Pad Mode Controls
+   Center: 16 RGB Silicone Velocity Pads (Directly Under 7" LCD)
+   Right: Bank Select, 2x5 Mode Matrix, Jog Wheel Cluster & Horizontal Transport
    ========================================================================== */
-#main-control-panel {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: 12px;
-    align-items: start;
+#deck-lower {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
     width: 100%;
+}
+
+/* 1. Touch Strip & Pad Mode Col */
+#touchstrip-section {
+    width: 110px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
     background: var(--recessed-well);
     border: 1px solid var(--chassis-border);
     border-radius: 8px;
-    padding: 12px;
+    padding: 12px 8px;
     box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
 }
 
-/* 1:1 Hardware Layout: Function Columns Beneath LCD */
-.deck-col-left, .deck-col-right {
-    display: flex;
-    gap: 8px;
-}
-
-.deck-button-col {
+.pad-control-col {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    width: 82px;
+    width: 100%;
+}
+
+/* 2. Pads Section (Beneath 7" Screen) */
+#pads-section {
+    flex: 1.15;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--recessed-well);
+    border: 1px solid var(--chassis-border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
+}
+
+.pads-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: #8c91a4;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.pads-header-tag {
+    font-weight: 700;
+    color: var(--screen-accent);
+    letter-spacing: 1px;
+}
+
+.pads-header-desc {
+    font-size: 9px;
+    color: var(--screen-text-dim);
+}
+
+/* 3. Navigation, Jog Wheel & Transport Deck */
+#nav-jog-section {
+    flex: 1.25;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--recessed-well);
+    border: 1px solid var(--chassis-border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
+}
+
+/* 2x5 Mode Control Grid */
+.nav-control-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    width: 100%;
 }
 
 .hw-btn-nav {
-    height: 48px;
+    height: 44px;
     width: 100%;
 }
 
@@ -1051,15 +1122,7 @@ body {
     box-shadow: 0 0 8px #e6a800;
 }
 
-/* Center Jog Wheel & Banks Cluster */
-.center-jog-deck {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    padding: 0 4px;
-}
-
+/* Banks Header & Buttons */
 .banks-header {
     display: flex;
     align-items: center;
@@ -1089,7 +1152,7 @@ body {
 }
 
 .hw-btn-bank {
-    height: 44px;
+    height: 42px;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -1132,53 +1195,108 @@ body {
     box-shadow: 0 0 12px rgba(0, 210, 255, 0.4);
 }
 
-/* 1:1 Physical Jog Wheel Surround Bezel (BACK, COPY, -, + at 4 corners) */
-.jog-surround-wrapper {
-    position: relative;
-    width: 290px;
-    height: 200px;
+/* Jog Wheel Quadrant: Timing on Left, Dial & Corners Center, Menu & D-Pad Right */
+.jog-quadrant-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin: 4px 0;
+}
+
+.jog-side-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 86px;
+}
+
+.dpad-cluster {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    margin-top: 4px;
+}
+
+.dpad-middle {
+    display: flex;
+    gap: 6px;
+}
+
+.hw-btn-dpad {
+    width: 32px;
+    height: 32px;
+    background: #252834;
+    border: 1px solid #3d4152;
+    border-radius: 4px;
+    color: #abb1c4;
+    font-size: 11px;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 4px 0;
+    transition: all 0.15s ease;
+}
+
+.hw-btn-dpad:hover {
+    background: #343746;
+    border-color: #00d2ff;
+    color: #fff;
+}
+
+.hw-btn-dpad:active {
+    background: #00d2ff;
+    color: #000;
+}
+
+/* 1:1 Physical Jog Wheel Surround Bezel (BACK, COPY, -, + at 4 corners) */
+.jog-surround-wrapper {
+    position: relative;
+    width: 270px;
+    height: 190px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .corner-tl {
     position: absolute;
-    top: 4px;
-    left: 8px;
-    width: 72px;
-    height: 48px;
+    top: 2px;
+    left: 4px;
+    width: 68px;
+    height: 44px;
 }
 
 .corner-tr {
     position: absolute;
-    top: 4px;
-    right: 8px;
-    width: 72px;
-    height: 48px;
+    top: 2px;
+    right: 4px;
+    width: 68px;
+    height: 44px;
 }
 
 .corner-bl {
     position: absolute;
-    bottom: 4px;
-    left: 8px;
-    width: 72px;
-    height: 48px;
+    bottom: 2px;
+    left: 4px;
+    width: 68px;
+    height: 44px;
 }
 
 .corner-br {
     position: absolute;
-    bottom: 4px;
-    right: 8px;
-    width: 72px;
-    height: 48px;
+    bottom: 2px;
+    right: 4px;
+    width: 68px;
+    height: 44px;
 }
 
 /* Central Jog Wheel Dial */
 .jog-wheel-outer {
-    width: 144px;
-    height: 144px;
+    width: 140px;
+    height: 140px;
     border-radius: 50%;
     background: radial-gradient(circle, #3a3d47 0%, #202228 65%, #101115 100%);
     border: 3px solid #4a4d5a;
@@ -1200,17 +1318,17 @@ body {
 
 .jog-dimple {
     position: absolute;
-    top: 20px;
-    width: 26px;
-    height: 26px;
+    top: 18px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: radial-gradient(circle, #15161b 30%, #30333d 100%);
     box-shadow: inset 0 2px 5px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.2);
 }
 
 .jog-center-click {
-    width: 54px;
-    height: 54px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     background: radial-gradient(circle, #2f313a 0%, #1c1d22 100%);
     border: 1px solid #454752;
@@ -1234,14 +1352,29 @@ body {
     background: #15161a;
 }
 
-/* ==========================================================================
-   RIGHT COLUMN: 4 Q-Links + Transport Controls
-   ========================================================================== */
-#col-right {
+/* 1:1 Horizontal Transport Bar Across Bottom of Nav Deck */
+.transport-horizontal-bar {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    width: 100%;
+    margin-top: auto;
+}
+
+.transport-horizontal-bar .hw-transport-btn {
+    height: 48px;
+    width: 100%;
     display: flex;
-    flex-direction: column;
-    gap: 20px;
+    flex-direction: row;
     align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 8px;
+}
+
+/* Q-Links Upper Deck Styling */
+#qlinks-upper {
+    width: 150px;
 }
 
 .qlinks-column {
@@ -1342,25 +1475,7 @@ body {
     color: #00d2ff;
 }
 
-/* Transport Buttons */
-#transport-cluster {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    width: 100%;
-}
-
-.hw-transport-btn {
-    height: 46px;
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 0 14px;
-    gap: 12px;
-}
-
+/* Transport Button Indicators */
 .transport-led {
     width: 10px;
     height: 10px;

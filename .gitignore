@@ -32,3 +32,6 @@ video_prod/clips_4k/
 video_prod/assets/
 video_prod/output/*.mp4
 
+
+__pycache__/
+*.pyc
