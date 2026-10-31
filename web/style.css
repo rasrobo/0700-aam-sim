@@ -58,8 +58,9 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    max-width: 1720px;
+    max-width: 1220px;
     width: 100%;
+    margin: 0 auto;
 }
 
 /* --- Top Sovereign Header --- */
@@ -164,7 +165,7 @@ body {
         0 20px 60px rgba(0, 0, 0, 0.8),
         inset 0 1px 1px rgba(255, 255, 255, 0.15),
         inset 0 -2px 4px rgba(0, 0, 0, 0.8);
-    padding: 24px 28px;
+    padding: 24px;
     width: 100%;
 }
 
@@ -199,7 +200,7 @@ body {
 #device-layout {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     width: 100%;
 }
 
@@ -208,9 +209,10 @@ body {
    ========================================================================== */
 #deck-upper {
     display: flex;
-    gap: 20px;
+    gap: 16px;
     align-items: stretch;
     width: 100%;
+    height: 480px;
 }
 
 #deck-upper-left {
@@ -218,8 +220,9 @@ body {
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
-    width: 110px;
-    padding: 10px 4px;
+    width: 125px;
+    flex-shrink: 0;
+    padding: 12px 6px;
     background: var(--recessed-well);
     border: 1px solid var(--chassis-border);
     border-radius: 8px;
@@ -397,16 +400,18 @@ body {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(4, 1fr);
-    gap: 12px;
-    background: var(--recessed-well);
-    padding: 16px;
-    border-radius: 10px;
+    gap: 10px;
+    background: #0f1013;
+    padding: 12px;
+    border-radius: 8px;
     border: 1px solid var(--chassis-border);
     box-shadow: inset 0 4px 12px rgba(0,0,0,0.85);
+    flex: 1;
 }
 
 .pad {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 1.15 / 1;
+    min-height: 82px;
     background: radial-gradient(circle at 50% 40%, #343742 0%, #21232a 75%, #17181d 100%);
     border: 2px solid #202229;
     border-radius: 8px;
@@ -488,6 +493,8 @@ body {
 
 /* 7" Screen Bezel & LCD */
 #screen-bezel {
+    flex: 1;
+    min-width: 0;
     background: #111216;
     border: 3px solid #282a32;
     border-radius: 12px;
@@ -495,11 +502,13 @@ body {
     box-shadow:
         inset 0 4px 10px rgba(0,0,0,0.9),
         0 3px 6px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
 }
 
 #lcd-screen {
     width: 100%;
-    height: 480px;
+    height: 100%;
     background: var(--screen-bg);
     border-radius: 6px;
     display: flex;
@@ -1001,22 +1010,24 @@ body {
    ========================================================================== */
 #deck-lower {
     display: flex;
-    gap: 20px;
+    gap: 16px;
     align-items: stretch;
     width: 100%;
+    min-height: 480px;
 }
 
 /* 1. Touch Strip & Pad Mode Col */
 #touchstrip-section {
-    width: 110px;
+    width: 125px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
     align-items: center;
     background: var(--recessed-well);
     border: 1px solid var(--chassis-border);
     border-radius: 8px;
-    padding: 12px 8px;
+    padding: 12px 6px;
     box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
 }
 
@@ -1027,16 +1038,22 @@ body {
     width: 100%;
 }
 
+.pad-control-col .hw-btn {
+    width: 100%;
+    height: 42px;
+}
+
 /* 2. Pads Section (Beneath 7" Screen) */
 #pads-section {
-    flex: 1.15;
+    width: 540px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     background: var(--recessed-well);
     border: 1px solid var(--chassis-border);
     border-radius: 8px;
-    padding: 14px 16px;
+    padding: 12px 14px;
     box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
 }
 
@@ -1064,14 +1081,16 @@ body {
 
 /* 3. Navigation, Jog Wheel & Transport Deck */
 #nav-jog-section {
-    flex: 1.25;
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 8px;
     background: var(--recessed-well);
     border: 1px solid var(--chassis-border);
     border-radius: 8px;
-    padding: 14px 16px;
+    padding: 12px 12px;
     box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
 }
 
@@ -1087,12 +1106,12 @@ body {
 .mode-row-primary {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
+    gap: 5px;
     width: 100%;
 }
 
 .hw-btn-nav {
-    height: 44px;
+    height: 40px;
     width: 100%;
 }
 
@@ -1131,7 +1150,7 @@ body {
 }
 
 .hw-btn-bank {
-    height: 42px;
+    height: 40px;
     position: relative;
     display: flex;
     flex-direction: column;
@@ -1179,27 +1198,29 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     width: 100%;
-    margin: 4px 0;
+    margin: 2px 0;
 }
 
 .jog-side-col {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    width: 82px;
+    gap: 8px;
+    width: 68px;
+    flex-shrink: 0;
 }
 
 .jog-side-col .hw-btn-nav {
-    height: 64px;
+    height: 70px;
 }
 
 /* 1:1 Physical Jog Wheel Surround Bezel (BACK, COPY, -, + at 4 corners) */
 .jog-surround-wrapper {
     position: relative;
-    width: 280px;
-    height: 160px;
+    flex: 1;
+    max-width: 300px;
+    height: 156px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1208,39 +1229,39 @@ body {
 .corner-tl {
     position: absolute;
     top: 0px;
-    left: 2px;
-    width: 66px;
-    height: 44px;
+    left: 6px;
+    width: 64px;
+    height: 42px;
 }
 
 .corner-tr {
     position: absolute;
     top: 0px;
-    right: 2px;
-    width: 66px;
-    height: 44px;
+    right: 6px;
+    width: 64px;
+    height: 42px;
 }
 
 .corner-bl {
     position: absolute;
     bottom: 0px;
-    left: 2px;
-    width: 66px;
-    height: 44px;
+    left: 6px;
+    width: 64px;
+    height: 42px;
 }
 
 .corner-br {
     position: absolute;
     bottom: 0px;
-    right: 2px;
-    width: 66px;
-    height: 44px;
+    right: 6px;
+    width: 64px;
+    height: 42px;
 }
 
 /* Central Jog Wheel Dial */
 .jog-wheel-outer {
-    width: 132px;
-    height: 132px;
+    width: 126px;
+    height: 126px;
     border-radius: 50%;
     background: radial-gradient(circle, #3a3d47 0%, #202228 65%, #101115 100%);
     border: 3px solid #4a4d5a;
@@ -1262,17 +1283,17 @@ body {
 
 .jog-dimple {
     position: absolute;
-    top: 16px;
-    width: 22px;
-    height: 22px;
+    top: 14px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: radial-gradient(circle, #15161b 30%, #30333d 100%);
     box-shadow: inset 0 2px 5px rgba(0,0,0,0.9), 0 1px 1px rgba(255,255,255,0.2);
 }
 
 .jog-center-click {
-    width: 50px;
-    height: 50px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: radial-gradient(circle, #2f313a 0%, #1c1d22 100%);
     border: 1px solid #454752;
@@ -1300,21 +1321,25 @@ body {
 .mode-row-secondary {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 6px;
+    gap: 5px;
     width: 100%;
+}
+
+.mode-row-secondary .hw-btn-nav {
+    height: 40px;
 }
 
 /* Row 4: Horizontal Transport Bar Across Bottom (5 Buttons) */
 .transport-horizontal-bar {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
+    gap: 6px;
     width: 100%;
     margin-top: auto;
 }
 
 .transport-horizontal-bar .hw-transport-btn {
-    height: 48px;
+    height: 46px;
     width: 100%;
     display: flex;
     flex-direction: row;
@@ -1326,18 +1351,20 @@ body {
 
 /* Q-Links Upper Deck Styling */
 #qlinks-upper {
-    width: 150px;
+    width: 155px;
+    flex-shrink: 0;
 }
 
 .qlinks-column {
     background: var(--recessed-well);
     border: 1px solid var(--chassis-border);
     border-radius: 8px;
-    padding: 12px 10px;
+    padding: 12px 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    justify-content: space-between;
+    height: 100%;
     width: 100%;
     box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
 }
