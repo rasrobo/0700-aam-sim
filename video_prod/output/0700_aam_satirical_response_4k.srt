@@ -1,0 +1,59 @@
+1
+00:00:00,100 --> 00:00:02,450
+You make a compelling point.
+
+2
+00:00:02,400 --> 00:00:06,175
+Why would anyone ever need an embedded hardware simulator?
+
+3
+00:00:06,175 --> 00:00:13,900
+Why test firmware cleanly in modern C++ when you could instead brick a four-hundred-dollar prototype groovebox at three in the morning?
+
+4
+00:00:13,900 --> 00:00:21,850
+That distinct, comforting smell of vaporized FR-four fiberglass lets the entire office know you are doing real engineering.
+
+5
+00:00:22,512 --> 00:00:27,274
+Some people brag about automated CI/CD pipelines.
+
+6
+00:00:27,224 --> 00:00:34,762
+They love that two thousand wire-accurate binary ComProtocol packets can pass unit tests in eighteen hundredths of a second.
+
+7
+00:00:34,762 --> 00:00:39,012
+But what happened to artisan, hand-crafted firmware development?
+
+8
+00:00:39,012 --> 00:00:47,149
+If you aren't physically mashing sixteen silicone pads ten thousand times until your thumbs go numb, can you even look yourself in the mirror?
+
+9
+00:00:47,804 --> 00:00:51,316
+And think of your remote open source contributors.
+
+10
+00:00:51,266 --> 00:01:01,266
+Giving them a zero-install web URL where the entire seven-inch touchscreen, velocity pads, and ComProtocol bridge run instantly at sixty frames a second?
+
+11
+00:01:01,266 --> 00:01:03,904
+Where is the character-building struggle?
+
+12
+00:01:03,904 --> 00:01:14,329
+It is much more romantic to ship fifty fragile developer boards through international customs, have three lost in transit, and wait six weeks for replacement tactile switches.
+
+13
+00:01:14,992 --> 00:01:20,517
+So keep your dangling jumper wires, your multimeter, and your fire extinguisher.
+
+14
+00:01:20,467 --> 00:01:38,179
+But for the rest of us who prefer shipping working firmware over ordering replacement motherboards, the 0700-AAM Sovereign Web Simulator is live right now in four K on GitHub Pages at rasrobo.github.io/0700-aam-sim.
+
+15
+00:01:38,179 --> 00:01:40,617
+Zero solder required.
