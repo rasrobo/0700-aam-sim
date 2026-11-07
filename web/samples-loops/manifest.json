@@ -1,0 +1,15 @@
+{
+  "about": "Four-bar loops of an original synthesised production. No third-party material.",
+  "pads": {
+    "0": "loop_drums",
+    "1": "loop_riff",
+    "2": "loop_stabs",
+    "3": "loop_hook"
+  },
+  "roles": {
+    "0": "drums",
+    "1": "bass",
+    "2": "stabs",
+    "3": "hook"
+  }
+}
