@@ -1,0 +1,15 @@
+{
+  "about": "General MIDI renders (FluidSynth + TimGM6mb) of a public-domain tune.",
+  "pads": {
+    "0": "gm_drums_loop",
+    "1": "gm_bass_loop",
+    "2": "gm_organ_loop",
+    "3": "gm_melody_loop"
+  },
+  "roles": {
+    "0": "drums",
+    "1": "bass",
+    "2": "organ",
+    "3": "melody"
+  }
+}
