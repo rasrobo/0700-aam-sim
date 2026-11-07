@@ -139,7 +139,9 @@ def main() -> int:
         hits = 0
         for i in range(n):
             want = note.Note(expected[i]).transpose(shift)
-            if want.name == note.Note(got[i]).name:
+            # compare the actual pitch, not the pitch class: .name drops the octave, so an
+            # A3 against an A4 was scoring as a match and hiding an octave error
+            if want.nameWithOctave == note.Note(got[i]).nameWithOctave:
                 hits += 1
         score = hits / n
         if score > best[0]:
