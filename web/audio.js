@@ -129,6 +129,7 @@ class AudioEngine {
             this.samples = Object.fromEntries(loaded);
             this.samplePads = pads;
             this.sampleMix = man.mix || {};
+            this.sampleNotes = man.notes || {};
             this.samplesReady = true;
             console.log("[sampler] loaded", names.length, "samples");
         } catch (e) {
@@ -143,13 +144,13 @@ class AudioEngine {
     // Mirrors upstream Kick's DrumSampler/samplerVoice (upstream/Kick/modules/engine/
     // objects/sampler): one voice per hit, gain from velocity, per-voice level and pan from
     // the program, pitch factor from the instrument's tuning. One-shot, as DrumSampler is.
-    _sampleVoice(name, velNorm, when) {
+    _sampleVoice(name, velNorm, when, extraRate) {
         const buf = this.samples && this.samples[name];
         if (!buf) return null;
         const mix = (this.sampleMix && this.sampleMix[name]) || { gain: 1.0, pan: 0.0 };
         const src = this.ctx.createBufferSource();
         src.buffer = buf;
-        src.playbackRate.value = Math.pow(2, this.params.tuning / 12.0);
+        src.playbackRate.value = Math.pow(2, this.params.tuning / 12.0) * (extraRate || 1);
         const g = this.ctx.createGain();
         g.gain.value = velNorm * (mix.gain != null ? mix.gain : 1.0);
         let node = g;
@@ -165,7 +166,18 @@ class AudioEngine {
     }
 
     scheduleSample(name, when, velNorm) {
-        return !!this._sampleVoice(name, velNorm, when);
+        return !!this._sampleVoice(name, velNorm, when, null);
+    }
+
+    // Keygroup playback, as upstream's KeygroupSampler does: one sample covers a range and
+    // every note is a playback-rate shift from the sample's root note.
+    schedulePitch(padIndex, midiNote, when, velNorm) {
+        const name = this.samplePads && this.samplePads[padIndex];
+        if (!name) return false;
+        const roots = this.sampleNotes || {};
+        const root = roots[padIndex];
+        const semis = (root == null) ? 0 : (midiNote - root);
+        return !!this._sampleVoice(name, velNorm, when, Math.pow(2, semis / 12));
     }
 
     playSample(name, velNorm) {
