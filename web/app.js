@@ -81,6 +81,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Instantiate Audio Engine ---
     const audio = new AudioEngine();
 
+    // Bundled samples load on the first gesture (an AudioContext cannot decode before one).
+    // Until they are ready every pad keeps its synthesised voice, so nothing breaks if the
+    // samples folder is absent.
+    window.__audio = audio;   // exposed for testing the sampler from the console
+    const kickSampler = () => { audio.loadSamples("samples/"); };
+    window.addEventListener("pointerdown", kickSampler, { once: true });
+    window.addEventListener("keydown", kickSampler, { once: true });
+
     // --- WebSocket ComProtocol Client ---
     let ws = null;
     let wsConnected = false;

@@ -1618,3 +1618,9 @@ body {
     border-radius: 3px;
     font-family: var(--font-mono);
 }
+
+/* performance flash: shows which pad is sounding */
+.pad.hit-flash {
+    outline: 3px solid #f97316;
+    box-shadow: 0 0 18px rgba(249, 115, 22, 0.9);
+}

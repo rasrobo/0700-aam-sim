@@ -71,6 +71,12 @@ class AudioEngine {
         if (this.ctx && this.ctx.state === "suspended") {
             this.ctx.resume();
         }
+        // load the bundled samples as soon as there is a context to decode them in; the
+        // guard stops loadSamples' own ensureContext call from recursing
+        if (this.ctx && !this.samplesReady && !this.samplesLoading && !this._samplerKicked) {
+            this._samplerKicked = true;
+            this.loadSamples("samples/");
+        }
     }
 
     setMasterVolume(val) { // 0.0 to 1.0
@@ -104,11 +110,82 @@ class AudioEngine {
         this.params.tuning = Math.round((normalized - 0.5) * 24);
     }
 
+    async loadSamples(base = "samples/") {
+        // Bundled samples, fetched on first user gesture (an AudioContext cannot decode
+        // before that). Silent no-op if the folder is missing, so the synth voices still
+        // work in a bare checkout.
+        if (this.samplesReady || this.samplesLoading) return this.samplesReady;
+        this.samplesLoading = true;
+        try {
+            this.ensureContext();
+            const man = await (await fetch(base + "manifest.json", { cache: "no-store" })).json();
+            const pads = man.pads || {};
+            const names = [...new Set(Object.values(pads))];
+            const loaded = await Promise.all(names.map(async (n) => {
+                const r = await fetch(base + n + ".wav");
+                const ab = await r.arrayBuffer();
+                return [n, await this.ctx.decodeAudioData(ab)];
+            }));
+            this.samples = Object.fromEntries(loaded);
+            this.samplePads = pads;
+            this.sampleMix = man.mix || {};
+            this.samplesReady = true;
+            console.log("[sampler] loaded", names.length, "samples");
+        } catch (e) {
+            console.warn("[sampler] no samples loaded, using synth voices:", e.message);
+            this.samplesReady = false;
+        } finally {
+            this.samplesLoading = false;
+        }
+        return this.samplesReady;
+    }
+
+    // Mirrors upstream Kick's DrumSampler/samplerVoice (upstream/Kick/modules/engine/
+    // objects/sampler): one voice per hit, gain from velocity, per-voice level and pan from
+    // the program, pitch factor from the instrument's tuning. One-shot, as DrumSampler is.
+    _sampleVoice(name, velNorm, when) {
+        const buf = this.samples && this.samples[name];
+        if (!buf) return null;
+        const mix = (this.sampleMix && this.sampleMix[name]) || { gain: 1.0, pan: 0.0 };
+        const src = this.ctx.createBufferSource();
+        src.buffer = buf;
+        src.playbackRate.value = Math.pow(2, this.params.tuning / 12.0);
+        const g = this.ctx.createGain();
+        g.gain.value = velNorm * (mix.gain != null ? mix.gain : 1.0);
+        let node = g;
+        if (this.ctx.createStereoPanner && mix.pan) {
+            const p = this.ctx.createStereoPanner();
+            p.pan.value = Math.max(-1, Math.min(1, mix.pan));
+            g.connect(p); node = p;
+        }
+        src.connect(g);
+        node.connect(this.filterNode);
+        src.start(Math.max(this.ctx.currentTime, when == null ? 0 : when));
+        return src;
+    }
+
+    scheduleSample(name, when, velNorm) {
+        return !!this._sampleVoice(name, velNorm, when);
+    }
+
+    playSample(name, velNorm) {
+        const v = this._sampleVoice(name, velNorm, null);
+        return !!v;
+    }
+
     triggerPad(padIndex, velocity = 127) { // padIndex 0 to 15
         this.ensureContext();
         if (!this.ctx) return;
 
         const velNorm = Math.max(0.1, Math.min(1.0, velocity / 127.0));
+        // A pad that has a bundled sample plays the sample; everything else keeps the
+        // synthesised voice. This is what the real KICK does -- it is a sampler -- and the
+        // model previously had no way to load a sound at all.
+        const sampleName = this.samplePads && this.samplePads[padIndex];
+        if (sampleName && this.samples && this.samples[sampleName]) {
+            this.playSample(sampleName, velNorm);
+            return;
+        }
         const instr = this.instruments[padIndex % this.instruments.length];
         const now = this.ctx.currentTime;
 

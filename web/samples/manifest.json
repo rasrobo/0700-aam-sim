@@ -1,0 +1,17 @@
+{
+  "about": "Synthesised sample set bundled with the simulator. No recorded material.",
+  "pads": {
+    "0": "kick",
+    "1": "snare",
+    "2": "hat_closed",
+    "3": "hat_open",
+    "4": "clap",
+    "12": "bass_fs1",
+    "13": "bass_e1",
+    "14": "bass_gs1",
+    "15": "stab_fsm",
+    "5": "hook_fs4",
+    "6": "hook_e4",
+    "7": "hook_gs4"
+  }
+}
