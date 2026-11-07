@@ -4,14 +4,18 @@
     "0": "kick",
     "1": "snare",
     "2": "hat_closed",
-    "3": "hat_open",
-    "4": "clap",
+    "3": "clap",
+    "4": "hook_fs4",
+    "5": "hook_e4",
+    "6": "hook_gs4",
+    "7": "mel_b3",
+    "8": "mel_cs4",
+    "9": "mel_d4",
+    "10": "mel_e4",
+    "11": "mel_fs4",
     "12": "bass_fs1",
     "13": "bass_e1",
     "14": "bass_gs1",
-    "15": "stab_fsm",
-    "5": "hook_fs4",
-    "6": "hook_e4",
-    "7": "hook_gs4"
+    "15": "stab_fsm"
   }
 }
