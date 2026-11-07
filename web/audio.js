@@ -110,11 +110,13 @@ class AudioEngine {
         this.params.tuning = Math.round((normalized - 0.5) * 24);
     }
 
-    async loadSamples(base = "samples/") {
+    async loadSamples(base = "samples/", force = false) {
         // Bundled samples, fetched on first user gesture (an AudioContext cannot decode
         // before that). Silent no-op if the folder is missing, so the synth voices still
         // work in a bare checkout.
-        if (this.samplesReady || this.samplesLoading) return this.samplesReady;
+        if (this.samplesLoading) return this.samplesReady;
+        if (this.samplesReady && !force) return this.samplesReady;
+        if (force) { this.samplesReady = false; this.samples = {}; this.samplePads = {}; }
         this.samplesLoading = true;
         try {
             this.ensureContext();
