@@ -35,3 +35,4 @@ video_prod/output/*.mp4
 
 __pycache__/
 *.pyc
+web/samples/stem_*.wav
