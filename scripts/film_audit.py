@@ -35,9 +35,19 @@ def sh(cmd):
 
 
 def rms_db(path: Path) -> float:
+    """RMS over the frames that are sounding, not over the part's silence.
+
+    A sparse part measured over its rests reads far quieter than it sounds, which made a
+    correct melody look 6 dB down.
+    """
     import librosa
     y, _ = librosa.load(str(path), sr=SR, mono=True)
-    return float(20 * np.log10(np.sqrt((y ** 2).mean()) + 1e-12))
+    if not len(y):
+        return -120.0
+    frames = np.array_split(y, max(1, len(y) // 2048))
+    fr = np.array([np.sqrt((f ** 2).mean()) for f in frames if len(f)])
+    live = fr[fr > fr.max() * 0.05] if fr.size else fr
+    return float(20 * np.log10(np.sqrt((live ** 2).mean()) + 1e-12))
 
 
 def stack(parts: list[Path], out: Path, seconds: float):
