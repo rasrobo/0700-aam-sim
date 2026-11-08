@@ -36,3 +36,10 @@ video_prod/output/*.mp4
 __pycache__/
 *.pyc
 web/samples/stem_*.wav
+
+# Generated sample sets (rebuild with scripts/abc_to_loops.py or make_loop_samples.py).
+# The default web/samples/ set is bundled product content and stays tracked.
+web/samples-abc-*/
+web/samples-loops/
+web/samples-rising/
+web/samples-saints/
