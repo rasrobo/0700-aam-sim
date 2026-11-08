@@ -199,6 +199,24 @@ def main() -> int:
     for i, (name, ev) in enumerate(parts.items()):
         raw = out / f"abc_{name}.wav"
         render(ev, name, raw, loop_s + 0.5, ql_to_s)
+        # FluidSynth's raw output level differs wildly per patch (the trumpet came out 25 dB
+        # below the kit), so each part is normalised to a target RMS before looping. Without
+        # this the melody exists but is inaudible in the mix.
+        target_db = {"drums": -14.0, "bass": -15.0, "chords": -19.0, "melody": -11.0}[name]
+        import numpy as _np
+        import wave as _wave
+        with _wave.open(str(raw), "rb") as r:
+            n = r.getnframes()
+            data = _np.frombuffer(r.readframes(n), dtype=_np.int16).astype(_np.float32) / 32768.0
+        if data.size:
+            rms = float(_np.sqrt((data ** 2).mean()) + 1e-12)
+            gain = (10 ** (target_db / 20.0)) / rms
+            data = _np.clip(data * gain, -1.0, 1.0)
+            with _wave.open(str(raw), "wb") as w:
+                w.setnchannels(1)
+                w.setsampwidth(2)
+                w.setframerate(SR)
+                w.writeframes((data * 32767).astype(_np.int16).tobytes())
         loop = out / f"abc_{name}_loop.wav"
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(raw),
                         "-t", f"{loop_s:.4f}",
