@@ -106,6 +106,9 @@ def main() -> int:
     args = ap.parse_args()
 
     d = Path(args.dir)
+    import json as _json
+    man = _json.loads((d / "manifest.json").read_text()) if (d / "manifest.json").exists() else {}
+    BPM = float(man.get("bpm", 120.0))
     mel_loop = d / "abc_melody_loop.wav"
     chord_loop = d / "abc_chords_loop.wav"
     if not mel_loop.exists():
@@ -127,7 +130,7 @@ def main() -> int:
     print(f"   match {hits}/{len(ref)} = {open_frac*100:.0f}%")
 
     # ---- 2. note-level precision / recall -----------------------------------
-    ql_to_s = 60.0 / 120.0
+    ql_to_s = 60.0 / BPM
     expected = [(t * ql_to_s, dd * ql_to_s, m) for t, dd, m in mel]
     lat = estimate_latency(expected, detected)
     print(f"   measured render+detect latency: {lat*1000:+.0f} ms (removed before matching)")
@@ -141,7 +144,7 @@ def main() -> int:
     import librosa
     y, sr = librosa.load(str(chord_loop), sr=22050, mono=True)
     chroma = librosa.feature.chroma_cqt(y=y, sr=sr)
-    beat_s = 60.0 / 120.0 * 1.0
+    beat_s = 60.0 / BPM
     n_beats = int(len(y) / sr / beat_s)
     names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
     ok = 0

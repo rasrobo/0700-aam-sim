@@ -54,6 +54,10 @@ def read_score(abc: str):
     """(melody[(ql_offset, ql_dur, midi)], chords[(ql_offset, ql_dur, symbol)], bar_ql)."""
     from music21 import converter, harmony
     s = converter.parse(abc, format="abc")
+    # a tie across a barline ("G4- | G C E F") is ONE held note, not a repeat. Without
+    # stripTies the score yields two note-ons where the ear hears one, and the render
+    # re-attacks the note.
+    s = s.stripTies()
     part = s.parts[0]
 
     mel = []
