@@ -58,7 +58,19 @@ class AudioEngine {
         this.analyser.fftSize = 256;
 
         this.filterNode.connect(this.masterGain);
-        this.masterGain.connect(this.analyser);
+        // Master safety limiter: layered loops (a chord + bass + arp ringing
+        // together) can sum well past 0 dB, and a raw Web Audio chain clips
+        // hard when they do. A gentle brickwall keeps the synth musical
+        // instead of distorted — the same job a groovebox master compressor
+        // does on hardware.
+        this.limiter = this.ctx.createDynamicsCompressor();
+        this.limiter.threshold.setValueAtTime(-10, this.ctx.currentTime);
+        this.limiter.knee.setValueAtTime(6, this.ctx.currentTime);
+        this.limiter.ratio.setValueAtTime(12, this.ctx.currentTime);
+        this.limiter.attack.setValueAtTime(0.002, this.ctx.currentTime);
+        this.limiter.release.setValueAtTime(0.24, this.ctx.currentTime);
+        this.masterGain.connect(this.limiter);
+        this.limiter.connect(this.analyser);
         this.analyser.connect(this.ctx.destination);
 
         this.isInitialized = true;

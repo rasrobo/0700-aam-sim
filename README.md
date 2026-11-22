@@ -190,3 +190,21 @@ The pinned upstream commit is recorded in `UPSTREAM_VERSION`.
 This project is licensed under the GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later). See [LICENSE](LICENSE) for the full text.
 
 Third-party copyright notices and upstream attributions are documented in [NOTICE.md](NOTICE.md).
+
+## Sound design notes (learned the hard way, 2026-11-22)
+
+- **One-shot blips are drum sounds, not instruments.** The original pitched
+  samples were 0.5 s dry blips; pitched across two octaves by the keygroup
+  they made every song sound broken. Pitched pads now use warm sustained
+  voices (scripts/make_warm_kit.py): fundamental-forward harmonics, a real
+  ADSR with sustain, vibrato + detune, ~3 s long so a note pitched up an
+  octave still rings. Keygroup sources must be *longer* than you think —
+  pitching down stretches them, pitching up eats them.
+- **Balance the kit in the manifest, not in the performance.** The old bass
+  samples sat ~18 dB under the melody and were effectively silent.
+  `samples/manifest.json` now carries per-sample `mix` gains (melody 0.5,
+  hooks 0.45, bass 0.6) so layered loops sum to a musical level.
+- **A master limiter is not optional once loops layer.** Chords + bass +
+  arpeggio ringing together summed to 240k clipped samples in one 20 s
+  performance. The engine now runs a gentle brickwall compressor on the
+  master bus (audio.js); the same render peaks clean.
