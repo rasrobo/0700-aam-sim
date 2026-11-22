@@ -54,7 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // 16 instruments x 16 steps pattern matrix
         pattern: Array.from({ length: 16 }, () => new Array(16).fill(false)),
         // Pitched notes recorded into the loop by keygroup overdub strikes:
-        // patternNotes[track][step] = MIDI note, or null for a plain hit.
+        // patternNotes[track][step] = array of MIDI notes (a chord can land
+        // on one step), or null for a plain unpitched hit.
         patternNotes: Array.from({ length: 16 }, () => new Array(16).fill(null)),
 
         // Mixer states (16 channels)
@@ -254,7 +255,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const step = state.currentStep;
             const track = keygroupNote != null ? state.keygroupPad : padIndex;
             state.pattern[track][step] = true;
-            state.patternNotes[track][step] = keygroupNote;
+            if (keygroupNote != null) {
+                if (!Array.isArray(state.patternNotes[track][step])) {
+                    state.patternNotes[track][step] = [];
+                }
+                if (!state.patternNotes[track][step].includes(keygroupNote)) {
+                    state.patternNotes[track][step].push(keygroupNote);
+                }
+            } else {
+                state.patternNotes[track][step] = null;
+            }
             const btn = document.querySelector(`.step-btn[data-track="${track}"][data-step="${step}"]`);
             if (btn) btn.classList.add("active");
         }
@@ -660,9 +670,10 @@ document.addEventListener("DOMContentLoaded", () => {
                         const pitched = state.patternNotes[track][step];
                         if (pitched != null && audio.samplesReady &&
                             audio.sampleNotes && audio.sampleNotes[track] != null) {
-                            // A keygroup note recorded by overdub: loop it
-                            // back at its recorded pitch.
-                            audio.schedulePitch(track, pitched, null, 110 / 127.0);
+                            // Keygroup notes recorded by overdub: loop them
+                            // back at their recorded pitches (chords too).
+                            const notes = Array.isArray(pitched) ? pitched : [pitched];
+                            notes.forEach(n => audio.schedulePitch(track, n, null, 110 / 127.0));
                             const padEl = padElements[track];
                             if (padEl) {
                                 padEl.classList.add("hit");
