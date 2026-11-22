@@ -208,3 +208,11 @@ Third-party copyright notices and upstream attributions are documented in [NOTIC
   arpeggio ringing together summed to 240k clipped samples in one 20 s
   performance. The engine now runs a gentle brickwall compressor on the
   master bus (audio.js); the same render peaks clean.
+- **Vibrato and detune read as "warpy strings" — piano fixed it.** The warm
+  synth kit (vibrato ~18 cents peak-to-peak, pitch-tracked after the fact,
+  plus a detuned second saw) sounded seasick, and sustained pads piled up
+  under half-second chord changes. The kit is now piano (scripts/
+  make_piano_kit.py): additive partials with inharmonicity, per-partial
+  decays, hammer tick — pitch dead steady, notes decay naturally, and
+  renders peak at 0.62 with lower manifest gains. Nothing is full blast;
+  the limiter only catches peaks (threshold -6 dB).

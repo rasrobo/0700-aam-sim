@@ -64,7 +64,7 @@ class AudioEngine {
         // instead of distorted — the same job a groovebox master compressor
         // does on hardware.
         this.limiter = this.ctx.createDynamicsCompressor();
-        this.limiter.threshold.setValueAtTime(-10, this.ctx.currentTime);
+        this.limiter.threshold.setValueAtTime(-6, this.ctx.currentTime);
         this.limiter.knee.setValueAtTime(6, this.ctx.currentTime);
         this.limiter.ratio.setValueAtTime(12, this.ctx.currentTime);
         this.limiter.attack.setValueAtTime(0.002, this.ctx.currentTime);
