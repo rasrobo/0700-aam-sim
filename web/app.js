@@ -11,6 +11,11 @@ document.addEventListener("DOMContentLoaded", () => {
         shiftActive: false,
         fullLevel: false,
         sixteenLevel: false,
+        // 16 LEVEL keygroup: the last pitched pad struck becomes the keygroup
+        // source; while 16 LEVEL is on, the 16 pads play that one sample
+        // chromatically (pad 5 = the sample's root note, ascending).
+        lastPad: 11,
+        keygroupPad: 11,
         activeView: "main",
 
         // Transport
@@ -48,6 +53,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 16 instruments x 16 steps pattern matrix
         pattern: Array.from({ length: 16 }, () => new Array(16).fill(false)),
+        // Pitched notes recorded into the loop by keygroup overdub strikes:
+        // patternNotes[track][step] = MIDI note, or null for a plain hit.
+        patternNotes: Array.from({ length: 16 }, () => new Array(16).fill(null)),
 
         // Mixer states (16 channels)
         mixer: Array.from({ length: 16 }, () => ({
@@ -85,6 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Until they are ready every pad keeps its synthesised voice, so nothing breaks if the
     // samples folder is absent.
     window.__audio = audio;   // exposed for testing the sampler from the console
+    window.__simState = state; // exposed for headless tests of the control surface
     const kickSampler = () => { audio.loadSamples("samples/"); };
     window.addEventListener("pointerdown", kickSampler, { once: true });
     window.addEventListener("keydown", kickSampler, { once: true });
@@ -164,7 +173,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // --- Pad Matrix & Strike Handling ---
-    const padElements = Array.from(document.querySelectorAll(".pad"));
+    // The chassis markup lists pads top-row first (13-16, 9-12, 5-8, 1-4), so
+    // DOM order is NOT pad order. Sort by the data-pad number: on the real
+    // device, the pad labelled 9 is pad 9 and plays pad 9's sound.
+    const padElements = Array.from(document.querySelectorAll(".pad"))
+        .sort((a, b) => parseInt(a.dataset.pad) - parseInt(b.dataset.pad));
 
     function updatePadColors() {
         const color = state.bankColors[state.currentBank % state.bankColors.length];
@@ -180,7 +193,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function triggerPadStrike(padIndex, velocity = 127, sendPacket = true) {
+    const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const noteName = (midi) => `${NOTE_NAMES[midi % 12]}${Math.floor(midi / 12) - 1}`;
+    // Pads whose bundled sample has a root note (see samples/manifest.json).
+    const PITCHED_PADS = new Set([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
+    const keygroupRoot = () => {
+        const roots = audio.sampleNotes || {};
+        return roots[state.keygroupPad];
+    };
+
+    function triggerPadStrike(padIndex, velocity = 127, sendPacket = true, fromSequencer = false) {
         audio.ensureContext();
 
         let effectiveVel = velocity;
@@ -201,12 +223,40 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Trigger Audio Synthesis
-        audio.triggerPad(padIndex, effectiveVel);
-
-        // Update active instrument in Step Sequencer view
         const instNameTag = document.getElementById("stepseq-inst-name");
-        if (instNameTag && audio.instruments[padIndex]) {
-            instNameTag.innerText = `Pad ${padIndex + 1}: ${audio.instruments[padIndex].name}`;
+        const root = keygroupRoot();
+        let keygroupNote = null;
+        if (!fromSequencer && state.sixteenLevel && root != null && audio.samplesReady) {
+            // 16 LEVEL keygroup performance: every pad plays the keygroup
+            // source sample at a chromatic pitch, pad 5 (index 4) = root.
+            const midiNote = root + (padIndex - 4);
+            keygroupNote = midiNote;
+            const velNorm = Math.max(0.1, Math.min(1.0, effectiveVel / 127.0));
+            audio.schedulePitch(state.keygroupPad, midiNote, null, velNorm);
+            if (instNameTag) {
+                instNameTag.innerText = `16 LEVEL Pad ${state.keygroupPad + 1} keygroup: ${noteName(midiNote)}`;
+            }
+        } else {
+            audio.triggerPad(padIndex, effectiveVel);
+            if (PITCHED_PADS.has(padIndex)) state.lastPad = padIndex;
+
+            // Update active instrument in Step Sequencer view
+            if (instNameTag && audio.instruments[padIndex]) {
+                instNameTag.innerText = `Pad ${padIndex + 1}: ${audio.instruments[padIndex].name}`;
+            }
+        }
+
+        // REC / OVERDUB: on the device, striking pads while the loop plays
+        // with Record or Overdub lit writes those hits into the pattern, and
+        // they loop back. Keygroup strikes write their pitch too, so a melody
+        // played once over the loop is captured and repeats.
+        if (!fromSequencer && state.isPlaying && (state.isRecording || state.isOverdubbing)) {
+            const step = state.currentStep;
+            const track = keygroupNote != null ? state.keygroupPad : padIndex;
+            state.pattern[track][step] = true;
+            state.patternNotes[track][step] = keygroupNote;
+            const btn = document.querySelector(`.step-btn[data-track="${track}"][data-step="${step}"]`);
+            if (btn) btn.classList.add("active");
         }
 
         // Send ComProtocol packet
@@ -498,6 +548,19 @@ document.addEventListener("DOMContentLoaded", () => {
     btn16Level.addEventListener("click", () => {
         state.sixteenLevel = !state.sixteenLevel;
         btn16Level.classList.toggle("active", state.sixteenLevel);
+        if (state.sixteenLevel) {
+            // The last pitched pad struck becomes the keygroup source, as on
+            // the hardware: hit a melodic/bass pad, then press 16 LEVEL and
+            // the pads become that sound played across chromatic pitches.
+            if (PITCHED_PADS.has(state.lastPad)) state.keygroupPad = state.lastPad;
+            const instNameTag = document.getElementById("stepseq-inst-name");
+            const root = keygroupRoot();
+            if (instNameTag) {
+                instNameTag.innerText = root != null
+                    ? `16 LEVEL: Pad ${state.keygroupPad + 1} keygroup (root ${noteName(root)} on Pad 5)`
+                    : `16 LEVEL: Pad ${state.keygroupPad + 1} keygroup (samples loading...)`;
+            }
+        }
         sendHwPacket(ComProtocol.CommandId.LEVEL_16, [state.sixteenLevel ? 0x01 : 0x00]);
     });
 
@@ -594,7 +657,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (state.pattern[track][step]) {
                     const ch = state.mixer[track];
                     if (!ch.mute) {
-                        triggerPadStrike(track, 110, false);
+                        const pitched = state.patternNotes[track][step];
+                        if (pitched != null && audio.samplesReady &&
+                            audio.sampleNotes && audio.sampleNotes[track] != null) {
+                            // A keygroup note recorded by overdub: loop it
+                            // back at its recorded pitch.
+                            audio.schedulePitch(track, pitched, null, 110 / 127.0);
+                            const padEl = padElements[track];
+                            if (padEl) {
+                                padEl.classList.add("hit");
+                                setTimeout(() => padEl.classList.remove("hit"), 120);
+                            }
+                        } else {
+                            triggerPadStrike(track, 110, false, true);
+                        }
                         ch.vuLevel = 0.95;
                     }
                 }
@@ -702,6 +778,7 @@ document.addEventListener("DOMContentLoaded", () => {
         for (let t = 0; t < 16; t++) {
             for (let s = 0; s < 16; s++) {
                 state.pattern[t][s] = false;
+                state.patternNotes[t][s] = null;
             }
         }
         document.querySelectorAll(".step-btn").forEach(btn => btn.classList.remove("active"));

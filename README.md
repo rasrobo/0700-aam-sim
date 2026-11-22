@@ -13,6 +13,31 @@ A desktop simulator, virtual device harness, and headless test suite for the BE 
 
 ---
 
+## Web simulator: device-true performance behaviour (2026-11-22)
+
+The web app (`web/`) mirrors how the physical 0700-AAM is actually played, so
+time spent in the sim transfers to the hardware:
+
+- **Pads play their labelled sounds.** The chassis markup lists pads top-row
+  first (13-16, 9-12, 5-8, 1-4); pad listeners are now bound by the pad's
+  `data-pad` number, not DOM position. (Before this fix, clicking the pad
+  labelled 9 triggered pad 5's sound.)
+- **16 LEVEL = keygroup performance.** Strike a melodic or bass pad, then press
+  **16 LEVEL**: that pad becomes the keygroup source (mirroring the upstream
+  firmware's KeygroupSampler, one sample across a pitch range) and all 16 pads
+  play it chromatically, with the source's root note on Pad 5. The LCD readout
+  names the source pad and the note each pad strike plays. Press 16 LEVEL
+  again to return to one-shot pads. Sequencer playback is never pitched.
+- **REC / OVERDUB record into the loop.** While the pattern plays with Record
+  or Overdub lit, pad strikes are written into the pattern at the current
+  step — exactly how a loop is built on the device. Keygroup strikes record
+  their pitch (`patternNotes`), and the sequencer loops them back at that
+  pitch. CLEAR wipes notes as well as hits.
+
+Verified headlessly (Puppeteer + analyser tap + pitch analysis): keygroup
+strikes from a C#4 source read back as A3 / C#4 / E4 / F#4, and an overdubbed
+E4 replays from the loop exactly one bar later, on pitch.
+
 ## Features
 
 - **Wire-Accurate Protocol Engine**: Full bidirectional encoding and decoding of the binary framed `ComProtocol` (`0x4D 0x54` header, CRC-8 polynomial `0x31`, request/response handling).
