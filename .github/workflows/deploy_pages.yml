@@ -35,6 +35,9 @@ jobs:
         with:
           path: './web'
 
+      - name: Wait for artifact metadata to settle
+        run: sleep 45
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
