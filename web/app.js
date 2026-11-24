@@ -68,24 +68,29 @@ document.addEventListener("DOMContentLoaded", () => {
         }))
     };
 
-    // Default catchy groove:
-    // Kick on 0, 4, 8, 12 (Steps 1, 5, 9, 13)
-    [0, 4, 8, 12].forEach(s => state.pattern[0][s] = true);
-    // Snare on 4, 12 (Steps 5, 13)
+    // Default demo song: "When the Saints Go Marching In" (public
+    // domain) — the opening phrase as a one-bar loop, so the machine
+    // plays a tune everyone knows the moment you press PLAY.
+    // (Replaced 2026-11-23: the old factory groove hammered a pitched
+    // D4 sample on all 16 steps as a "shaker" and stabbed unrelated
+    // bass pitches — noise, not a song.)
+    // Drums (marching): kick on beats 1 and 3, snare on 2 and 4,
+    // closed hat on every eighth note.
+    [0, 8].forEach(s => state.pattern[0][s] = true);
     [4, 12].forEach(s => state.pattern[1][s] = true);
-    // Closed Hat on 0, 2, 4, 6, 8, 10, 12, 14
     [0, 2, 4, 6, 8, 10, 12, 14].forEach(s => state.pattern[2][s] = true);
-    // Open Hat on 2, 10
-    [2, 10].forEach(s => state.pattern[3][s] = true);
-    // Hand Clap on 4, 12
-    [4, 12].forEach(s => state.pattern[4][s] = true);
-    // Shaker on all 16
-    for (let s = 0; s < 16; s++) state.pattern[9][s] = true;
-    // Bass on 0, 3, 6, 10
-    state.pattern[12][0] = true;
-    state.pattern[13][3] = true;
-    state.pattern[14][6] = true;
-    state.pattern[15][10] = true;
+    // Bass (track 13, keygroup): G under the phrase, D under the top
+    // note — patternNotes carry the pitches, exactly as an overdub
+    // capture would have written them.
+    state.pattern[13][0] = true;  state.patternNotes[13][0] = [43];   // G2
+    state.pattern[13][8] = true;  state.patternNotes[13][8] = [43];   // G2
+    state.pattern[13][12] = true; state.patternNotes[13][12] = [50];  // D3
+    // Melody (track 9, keygroup): G4 B4 C5 D5, one note per beat —
+    // "Oh when the saints..."
+    [[0, 67], [4, 71], [8, 72], [12, 74]].forEach(([s, n]) => {
+        state.pattern[9][s] = true;
+        state.patternNotes[9][s] = [n];
+    });
 
     // --- Instantiate Audio Engine ---
     const audio = new AudioEngine();
