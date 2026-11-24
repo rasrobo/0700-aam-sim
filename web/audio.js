@@ -47,7 +47,7 @@ class AudioEngine {
         this.ctx = new AudioCtx();
 
         this.masterGain = this.ctx.createGain();
-        this.masterGain.gain.setValueAtTime(0.85, this.ctx.currentTime);
+        this.masterGain.gain.setValueAtTime(0.55, this.ctx.currentTime);
 
         this.filterNode = this.ctx.createBiquadFilter();
         this.filterNode.type = "lowpass";

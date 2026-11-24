@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
         qlinks: [0.65, 0.25, 0.50, 0.50],
 
         // Master & Rec Gain (0.0 to 1.0)
-        masterGain: 0.85,
+        masterGain: 0.55,
         recGain: 0.70,
 
         // Touch Slider (0.0 to 1.0)
@@ -405,6 +405,76 @@ document.addEventListener("DOMContentLoaded", () => {
     setupRotaryKnob("knob-rec", (val) => {
         state.recGain = val;
     });
+
+    // --- Output strip (below the device): volume slider + live meter.
+    // The meter reads the engine's own analyser, which sits AFTER the
+    // master limiter — so it shows exactly what reaches the speakers,
+    // red zone included. Default master is 0.55 (normalised 2026-11-24:
+    // at the old 0.85 the demo loop ran hot, RMS ~0.12 with everything
+    // stacked; 0.55 measures peak ~0.39 / RMS ~0.07 with headroom for
+    // pad bursts). The on-device MASTER knob and this slider drive the
+    // same gain and stay in sync.
+    const outSlider = document.getElementById("output-volume");
+    const outMeter = document.getElementById("output-meter");
+    const outDb = document.getElementById("output-db");
+    const knobMasterEl = document.getElementById("knob-master");
+    let outDragging = false;
+    if (outSlider) {
+        outSlider.addEventListener("pointerdown", () => { outDragging = true; });
+        window.addEventListener("pointerup", () => { outDragging = false; });
+        outSlider.addEventListener("input", () => {
+            const v = parseFloat(outSlider.value) / 100.0;
+            state.masterGain = v;
+            audio.setMasterVolume(v);
+            if (knobMasterEl) {
+                knobMasterEl.dataset.val = Math.round(v * 100);
+                const ind = knobMasterEl.querySelector(".knob-indicator");
+                if (ind) ind.style.transform = `rotate(${-135 + v * 270}deg)`;
+            }
+        });
+    }
+    if (outMeter) {
+        const mctx = outMeter.getContext("2d");
+        const mdata = new Float32Array(512);
+        let peakHold = 0, peakAge = 0;
+        const drawMeter = () => {
+            requestAnimationFrame(drawMeter);
+            const W = outMeter.width, H = outMeter.height;
+            mctx.fillStyle = "#0b0e14";
+            mctx.fillRect(0, 0, W, H);
+            let peak = 0;
+            if (audio.analyser) {
+                audio.analyser.getFloatTimeDomainData(mdata);
+                for (let i = 0; i < mdata.length; i++) {
+                    const a = Math.abs(mdata[i]);
+                    if (a > peak) peak = a;
+                }
+            }
+            if (peak >= peakHold) { peakHold = peak; peakAge = 0; }
+            else if (++peakAge > 45) { peakHold = Math.max(0, peakHold - 0.008); peakAge = 30; }
+            const frac = Math.min(1, peak);
+            const grad = mctx.createLinearGradient(0, 0, W, 0);
+            grad.addColorStop(0, "#37d67a");
+            grad.addColorStop(0.62, "#37d67a");
+            grad.addColorStop(0.78, "#f5c542");
+            grad.addColorStop(0.92, "#e5484d");
+            grad.addColorStop(1, "#e5484d");
+            mctx.fillStyle = grad;
+            mctx.fillRect(0, 0, W * frac, H);
+            mctx.fillStyle = "rgba(255,255,255,0.85)";
+            mctx.fillRect(Math.max(0, W * Math.min(1, peakHold) - 2), 0, 2, H);
+            if (outDb) {
+                outDb.textContent = peakHold > 0.001
+                    ? `${(20 * Math.log10(peakHold)).toFixed(1)} dB`
+                    : "-inf dB";
+            }
+            if (outSlider && !outDragging) {
+                const sv = Math.round(state.masterGain * 100);
+                if (parseFloat(outSlider.value) !== sv) outSlider.value = sv;
+            }
+        };
+        drawMeter();
+    }
 
     // --- 4 Q-Link Rotary Encoders with 360 Radial LED Rings ---
     const qlinkReadouts = [

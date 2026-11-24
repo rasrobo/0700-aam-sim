@@ -49,7 +49,7 @@
                         <div class="brand-subtle">0700-AAM</div>
                         <div class="analog-pots">
                             <div class="pot-module">
-                                <div class="rotary-knob" id="knob-master" data-val="85">
+                                <div class="rotary-knob" id="knob-master" data-val="55">
                                     <div class="knob-indicator"></div>
                                 </div>
                                 <span class="pot-label">MASTER</span>
@@ -430,6 +430,14 @@
                 </section>
             </div>
         </main>
+
+        <!-- Output strip: master volume + live output monitor (post-limiter) -->
+        <section id="output-strip" aria-label="Output volume and level">
+            <span class="out-label">OUTPUT</span>
+            <input type="range" id="output-volume" min="0" max="100" value="55" aria-label="Output volume">
+            <canvas id="output-meter" width="220" height="14"></canvas>
+            <span class="out-db" id="output-db">-inf dB</span>
+        </section>
 
         <!-- Keyboard Shortcut Overlay Modal -->
         <div id="modal-keymap" class="modal-overlay hidden">
