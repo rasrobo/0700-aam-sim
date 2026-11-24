@@ -10,6 +10,9 @@ document.addEventListener("DOMContentLoaded", () => {
         currentBank: 0, // 0 = Bank A ... 7 = Bank H
         shiftActive: false,
         fullLevel: false,
+        tcOn: true,
+        lastStruckPad: 0,
+        currentSeq: 0,
         sixteenLevel: false,
         // 16 LEVEL keygroup: the last pitched pad struck becomes the keygroup
         // source; while 16 LEVEL is on, the 16 pads play that one sample
@@ -217,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function triggerPadStrike(padIndex, velocity = 127, sendPacket = true, fromSequencer = false) {
         audio.ensureContext();
+        if (!fromSequencer) state.lastStruckPad = padIndex;
 
         let effectiveVel = velocity;
         if (state.fullLevel) effectiveVel = 127;
@@ -264,7 +268,13 @@ document.addEventListener("DOMContentLoaded", () => {
         // they loop back. Keygroup strikes write their pitch too, so a melody
         // played once over the loop is captured and repeats.
         if (!fromSequencer && state.isPlaying && (state.isRecording || state.isOverdubbing)) {
-            const step = state.currentStep;
+            let step = state.currentStep;
+            if (!state.tcOn && state._stepDurMs) {
+                // TC off: no timing correction — the strike belongs to
+                // whichever step boundary it is closest to in time.
+                const phase = performance.now() - (state._stepStartAt || 0);
+                if (phase > state._stepDurMs / 2) step = (step + 1) % state.totalSteps;
+            }
             const track = keygroupNote != null ? state.keygroupPad : padIndex;
             state.pattern[track][step] = true;
             if (keygroupNote != null) {
@@ -296,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
             const relY = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
             // Lower on the pad = higher velocity
-            const vel = Math.round(60 + (1 - relY) * 67);
+            const vel = Math.round(60 + relY * 67);
             triggerPadStrike(idx, vel, true);
         };
 
@@ -656,6 +666,246 @@ document.addEventListener("DOMContentLoaded", () => {
         sendHwPacket(ComProtocol.CommandId.LEVEL_16, [state.sixteenLevel ? 0x01 : 0x00]);
     });
 
+    // --- Previously dead hardware buttons, wired to real functions
+    // (button audit 2026-11-24: these had labels and protocol ids but
+    // no handlers at all). Each one now does the job its label claims,
+    // against the sim's real state.
+    const refreshStepGrid = () => {
+        document.querySelectorAll(".step-btn").forEach(btn => {
+            const t = parseInt(btn.dataset.track), st = parseInt(btn.dataset.step);
+            btn.classList.toggle("active", !!state.pattern[t][st]);
+        });
+    };
+    const flashBtn = (el) => {
+        if (!el) return;
+        el.classList.add("active");
+        setTimeout(() => el.classList.remove("active"), 220);
+    };
+    const clonePattern = () => JSON.parse(JSON.stringify({
+        pattern: state.pattern, patternNotes: state.patternNotes }));
+    const applyPattern = (data) => {
+        state.pattern = data.pattern;
+        state.patternNotes = data.patternNotes;
+        refreshStepGrid();
+    };
+
+    // TC ON/OFF: timing correction for captured strikes (see the
+    // capture block in triggerPadStrike).
+    const btnTc = document.getElementById("btn-tc");
+    btnTc.classList.add("active"); // TC defaults on
+    btnTc.addEventListener("click", () => {
+        state.tcOn = !state.tcOn;
+        btnTc.classList.toggle("active", state.tcOn);
+        const val = document.getElementById("main-tc-val");
+        if (val) val.innerText = state.tcOn ? "1/16 Standard" : "Off (nearest step)";
+        sendHwPacket(ComProtocol.CommandId.TC, [state.tcOn ? 0x01 : 0x00]);
+    });
+
+    // TRACK MUTE / PAD MUTE: mute the last struck pad's track. The
+    // sequencer already honours state.mixer[track].mute.
+    const btnTrackMute = document.getElementById("btn-track-mute");
+    btnTrackMute.addEventListener("click", () => {
+        const track = state.lastStruckPad;
+        state.mixer[track].mute = !state.mixer[track].mute;
+        btnTrackMute.classList.toggle("active", state.mixer[track].mute);
+        const strip = document.querySelectorAll("#mixer-strips .mixer-strip")[track];
+        const mb = strip ? strip.querySelector(".strip-btn.mute") : null;
+        if (mb) mb.classList.toggle("active", state.mixer[track].mute);
+        sendHwPacket(ComProtocol.CommandId.TRACK_MUTE, [track, state.mixer[track].mute ? 0x01 : 0x00]);
+    });
+
+    // ERASE / CLEAR: erase the last struck pad's row; with SHIFT held,
+    // erase the whole pattern.
+    const btnErase = document.getElementById("btn-erase");
+    btnErase.addEventListener("click", () => {
+        if (state.shiftActive) {
+            for (let t = 0; t < 16; t++) {
+                state.pattern[t].fill(false);
+                state.patternNotes[t].fill(null);
+            }
+        } else {
+            const t = state.lastStruckPad;
+            state.pattern[t].fill(false);
+            state.patternNotes[t].fill(null);
+        }
+        refreshStepGrid();
+        flashBtn(btnErase);
+        sendHwPacket(ComProtocol.CommandId.ERASE, [state.lastStruckPad]);
+    });
+
+    // COPY / PASTE: plain press copies the whole pattern; SHIFT+press
+    // pastes it back (the device's one button, two jobs).
+    let patternClipboard = null;
+    const btnCopy = document.getElementById("btn-copy");
+    btnCopy.addEventListener("click", () => {
+        if (state.shiftActive && patternClipboard) {
+            applyPattern(JSON.parse(JSON.stringify(patternClipboard)));
+        } else {
+            patternClipboard = clonePattern();
+        }
+        flashBtn(btnCopy);
+        sendHwPacket(ComProtocol.CommandId.COPY, [state.shiftActive ? 0x01 : 0x00]);
+    });
+
+    // NOTE REPEAT / LATCH: while on, the last struck pad retriggers
+    // every step (16ths at the current bpm) until switched off.
+    let noteRepeatTimer = null;
+    const btnNoteRepeat = document.getElementById("btn-note-repeat");
+    const stopNoteRepeat = () => {
+        if (noteRepeatTimer) { clearTimeout(noteRepeatTimer); noteRepeatTimer = null; }
+    };
+    btnNoteRepeat.addEventListener("click", () => {
+        state.noteRepeatOn = !state.noteRepeatOn;
+        btnNoteRepeat.classList.toggle("active", state.noteRepeatOn);
+        stopNoteRepeat();
+        if (state.noteRepeatOn) {
+            const tick = () => {
+                if (!state.noteRepeatOn) return;
+                triggerPadStrike(state.lastStruckPad, 110, false);
+                noteRepeatTimer = setTimeout(tick, (60000 / state.bpm) / 4);
+            };
+            tick();
+        }
+        sendHwPacket(ComProtocol.CommandId.NOTE_REPEAT, [state.noteRepeatOn ? 0x01 : 0x00]);
+    });
+
+    // NEXT SEQ / FX: four sequence slots in memory. Leaving a slot
+    // saves it; entering a fresh slot starts from an empty pattern.
+    const seqSlots = [null, null, null, null];
+    const btnNextSeq = document.getElementById("btn-next-seq");
+    btnNextSeq.addEventListener("click", () => {
+        seqSlots[state.currentSeq] = { ...clonePattern(), bpm: state.bpm };
+        state.currentSeq = (state.currentSeq + 1) % 4;
+        const slot = seqSlots[state.currentSeq];
+        if (slot) {
+            applyPattern(JSON.parse(JSON.stringify(slot)));
+            state.bpm = slot.bpm;
+        } else {
+            applyPattern({ pattern: Array.from({ length: 16 }, () => new Array(16).fill(false)),
+                           patternNotes: Array.from({ length: 16 }, () => new Array(16).fill(null)) });
+        }
+        const label = document.getElementById("main-seq-name");
+        if (label) label.innerText = `Seq 0${state.currentSeq + 1}` + (state.currentSeq === 0 ? " - Main Groove" : " - User");
+        flashBtn(btnNextSeq);
+        sendHwPacket(ComProtocol.CommandId.NEXT_SEQ, [state.currentSeq]);
+    });
+
+    // BACK / UNDO button: back to the main screen.
+    document.getElementById("btn-back").addEventListener("click", () => switchView("main"));
+
+    // EXPORT GOLDEN JSON TRACE: download the live state as JSON.
+    const btnGolden = document.getElementById("btn-download-golden");
+    if (btnGolden) btnGolden.addEventListener("click", () => {
+        const trace = { device: "0700-AAM sim", exportedAt: new Date().toISOString(),
+            bpm: state.bpm, currentBank: state.currentBank, currentSeq: state.currentSeq,
+            pattern: state.pattern, patternNotes: state.patternNotes,
+            mixer: state.mixer.map(ch => ({ volume: ch.volume, mute: ch.mute })) };
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(trace, null, 2)], { type: "application/json" }));
+        a.download = "0700-aam-golden-trace.json";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    });
+
+    // Sample edit: REV / NORM / CROP operate on the last struck pad's
+    // actual sample buffer, so the next hit plays the edit.
+    const editSample = (el, fn) => {
+        if (!el) return;
+        el.addEventListener("click", () => {
+            const name = audio.samplePads && audio.samplePads[state.lastStruckPad];
+            const buf = name && audio.samples && audio.samples[name];
+            if (!buf || !audio.ctx) return;
+            audio.samples[name] = fn(buf);
+            flashBtn(el);
+        });
+    };
+    editSample(document.getElementById("btn-sample-rev"), (buf) => {
+        const out = audio.ctx.createBuffer(buf.numberOfChannels, buf.length, buf.sampleRate);
+        for (let c = 0; c < buf.numberOfChannels; c++) {
+            const d = buf.getChannelData(c).slice();
+            d.reverse();
+            out.copyToChannel(d, c);
+        }
+        return out;
+    });
+    editSample(document.getElementById("btn-sample-norm"), (buf) => {
+        let peak = 0;
+        for (let c = 0; c < buf.numberOfChannels; c++)
+            for (const v of buf.getChannelData(c)) peak = Math.max(peak, Math.abs(v));
+        if (!peak) return buf;
+        const g = 0.89 / peak;
+        const out = audio.ctx.createBuffer(buf.numberOfChannels, buf.length, buf.sampleRate);
+        for (let c = 0; c < buf.numberOfChannels; c++) {
+            const d = buf.getChannelData(c).slice();
+            for (let i = 0; i < d.length; i++) d[i] *= g;
+            out.copyToChannel(d, c);
+        }
+        return out;
+    });
+    editSample(document.getElementById("btn-sample-crop"), (buf) => {
+        const TH = 0.002, PAD = 256;
+        let first = buf.length, last = 0;
+        for (let c = 0; c < buf.numberOfChannels; c++) {
+            const d = buf.getChannelData(c);
+            for (let i = 0; i < d.length; i++) if (Math.abs(d[i]) > TH) { if (i < first) first = i; if (i > last) last = i; }
+        }
+        if (last <= first) return buf;
+        first = Math.max(0, first - PAD);
+        last = Math.min(buf.length - 1, last + PAD);
+        const out = audio.ctx.createBuffer(buf.numberOfChannels, last - first + 1, buf.sampleRate);
+        for (let c = 0; c < buf.numberOfChannels; c++)
+            out.copyToChannel(buf.getChannelData(c).subarray(first, last + 1), c);
+        return out;
+    });
+
+    // BROWSE / SAVE: pattern slots in localStorage, in a modal like
+    // the keymap's. Save stores the current pattern under a name;
+    // Load brings one back onto the machine.
+    const browseModal = document.getElementById("modal-browse");
+    const browseList = document.getElementById("browse-list");
+    const LS_KEY = "aam-pattern-slots-v1";
+    const loadSlots = () => { try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; } catch { return []; } };
+    const storeSlots = (slots) => localStorage.setItem(LS_KEY, JSON.stringify(slots));
+    const renderBrowseList = () => {
+        const slots = loadSlots();
+        browseList.innerHTML = slots.length ? "" : "<p>No saved patterns yet. Name one above and press Save.</p>";
+        slots.forEach((slot, i) => {
+            const row = document.createElement("div");
+            row.className = "browse-row";
+            const nm = document.createElement("span");
+            nm.textContent = `${slot.name} (${slot.bpm} BPM)`;
+            const load = document.createElement("button");
+            load.textContent = "Load";
+            load.addEventListener("click", () => {
+                applyPattern(JSON.parse(JSON.stringify(slot.data)));
+                state.bpm = slot.bpm;
+                browseModal.classList.add("hidden");
+            });
+            const del = document.createElement("button");
+            del.textContent = "Delete";
+            del.addEventListener("click", () => {
+                const s2 = loadSlots(); s2.splice(i, 1); storeSlots(s2); renderBrowseList();
+            });
+            row.append(nm, load, del);
+            browseList.appendChild(row);
+        });
+    };
+    document.getElementById("btn-browse").addEventListener("click", () => {
+        renderBrowseList();
+        browseModal.classList.remove("hidden");
+        sendHwPacket(ComProtocol.CommandId.BROWSE, [0x01]);
+    });
+    document.getElementById("browse-close").addEventListener("click", () => browseModal.classList.add("hidden"));
+    document.getElementById("browse-save").addEventListener("click", () => {
+        const nameEl = document.getElementById("browse-name");
+        const name = (nameEl.value || "").trim() || `Pattern ${loadSlots().length + 1}`;
+        const slots = loadSlots();
+        slots.push({ name, bpm: state.bpm, data: clonePattern() });
+        storeSlots(slots);
+        nameEl.value = "";
+        renderBrowseList();
+    });
+
     // --- Tap Tempo Engine ---
     const tapTimes = [];
     const tapBtn = document.getElementById("btn-tap-tempo");
@@ -743,6 +993,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         seqInterval = setInterval(() => {
             const step = state.currentStep;
+            state._stepStartAt = performance.now();
+            state._stepDurMs = stepTimeMs;
 
             // Trigger active pattern steps
             for (let track = 0; track < 16; track++) {

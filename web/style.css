@@ -1637,3 +1637,11 @@ body {
   background: #0b0e14; }
 #output-strip .out-db { color: #9aa4b2; font-size: 12px; font-variant-numeric: tabular-nums;
   min-width: 52px; text-align: right; }
+
+/* --- Browse / Save modal rows --- */
+.browse-save-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.browse-save-row input { flex: 1; padding: 7px 10px; border-radius: 6px;
+  border: 1px solid #2a3140; background: #0b0e14; color: #e8ecf3; }
+.browse-row { display: flex; align-items: center; gap: 10px; padding: 7px 0;
+  border-top: 1px solid rgba(255,255,255,0.07); }
+.browse-row span { flex: 1; }

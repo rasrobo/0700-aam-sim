@@ -105,7 +105,7 @@
                                         </div>
                                         <div class="stat-card">
                                             <div class="card-title">QUANTIZATION (TC)</div>
-                                            <div class="card-val">1/16 Standard</div>
+                                            <div class="card-val" id="main-tc-val">1/16 Standard</div>
                                             <div class="card-sub">Swing: 54% | Latch: Off</div>
                                         </div>
                                         <div class="stat-card">
@@ -473,6 +473,23 @@
     </div>
 
     <!-- Scripts -->
+    <!-- Browse / Save modal: pattern slots in localStorage -->
+    <div id="modal-browse" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Browse / Save Patterns</h2>
+                <button class="modal-close" id="browse-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="browse-save-row">
+                    <input type="text" id="browse-name" placeholder="Pattern name" maxlength="40">
+                    <button id="browse-save">Save current pattern</button>
+                </div>
+                <div id="browse-list"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="protocol.js"></script>
     <script src="audio.js"></script>
     <script src="app.js"></script>
