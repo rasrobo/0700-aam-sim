@@ -79,17 +79,24 @@ document.addEventListener("DOMContentLoaded", () => {
     [0, 8].forEach(s => state.pattern[0][s] = true);
     [4, 12].forEach(s => state.pattern[1][s] = true);
     [0, 2, 4, 6, 8, 10, 12, 14].forEach(s => state.pattern[2][s] = true);
-    // Bass (track 13, keygroup): G under the phrase, D under the top
-    // note — patternNotes carry the pitches, exactly as an overdub
-    // capture would have written them.
-    state.pattern[13][0] = true;  state.patternNotes[13][0] = [43];   // G2
-    state.pattern[13][8] = true;  state.patternNotes[13][8] = [43];   // G2
-    state.pattern[13][12] = true; state.patternNotes[13][12] = [50];  // D3
-    // Melody (track 9, keygroup): G4 B4 C5 D5, one note per beat —
-    // "Oh when the saints..."
+    // Voicing rule (2026-11-24, the anti-warp rule): a keygroup note
+    // is a playback-rate shift from the sample's root, and big shifts
+    // sound warped — the old demo ran the melody on mel_d4 (root 62)
+    // at +5/+9/+10/+12 semitones. So every demo note sits on the
+    // track whose root is closest to it, keeping shifts within a few
+    // semitones — the same reason the song renders use a soundfont
+    // (a real sample near every pitch) instead of one stretched one.
+    // Bass: G2 on track 12 (bass_fs1, root 42, +1), D3 on track 14
+    // (bass_gs1, root 44, +6) — patternNotes carry the pitches,
+    // exactly as an overdub capture would have written them.
+    state.pattern[12][0] = true;  state.patternNotes[12][0] = [43];   // G2
+    state.pattern[12][8] = true;  state.patternNotes[12][8] = [43];   // G2
+    state.pattern[14][12] = true; state.patternNotes[14][12] = [50];  // D3
+    // Melody on track 6 (hook_gs4, root 68): G4 B4 C5 D5 at
+    // -1/+3/+4/+6 semitones — "Oh when the saints..."
     [[0, 67], [4, 71], [8, 72], [12, 74]].forEach(([s, n]) => {
-        state.pattern[9][s] = true;
-        state.patternNotes[9][s] = [n];
+        state.pattern[6][s] = true;
+        state.patternNotes[6][s] = [n];
     });
 
     // --- Instantiate Audio Engine ---
