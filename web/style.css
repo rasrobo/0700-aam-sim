@@ -1638,6 +1638,33 @@ body {
 #output-strip .out-db { color: #9aa4b2; font-size: 12px; font-variant-numeric: tabular-nums;
   min-width: 52px; text-align: right; }
 
+/* --- Learner panel (below the device, with the output strip) --- */
+#learner-panel { width: min(1220px, 94vw); margin: -12px auto 26px; padding: 12px 18px;
+  background: #10131a; border: 1px solid #232833; border-radius: 10px;
+  box-sizing: border-box; font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  color: #cfd6e1; font-size: 13px; }
+#learner-panel .out-label { color: #9aa4b2; font-size: 12px; font-weight: 700;
+  letter-spacing: 0.14em; }
+#learner-panel .lp-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#learner-panel .lp-starts-row { margin-top: 9px; }
+#learner-panel select { padding: 6px 8px; border-radius: 6px; border: 1px solid #2a3140;
+  background: #0b0e14; color: #e8ecf3; font-size: 13px; }
+#learner-panel .lp-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid #2a3140;
+  background: #171c26; color: #e8ecf3; font-size: 13px; cursor: pointer; }
+#learner-panel .lp-btn:hover { border-color: #e8a33d; color: #ffd88a; }
+#learner-panel .lp-starts-label { color: #9aa4b2; font-size: 12px; }
+#learner-panel #lp-starts a { color: #7cc4ff; text-decoration: none; margin-right: 12px;
+  font-size: 12.5px; white-space: nowrap; }
+#learner-panel #lp-starts a:hover { text-decoration: underline; }
+#learner-panel .lp-result { margin-top: 10px; }
+#learner-panel .lp-result:empty { display: none; }
+#learner-panel .lp-verdict { font-weight: 700; font-size: 14px; }
+#learner-panel .lp-verdict.ok { color: #37d67a; }
+#learner-panel .lp-verdict.bad { color: #f5c542; }
+#learner-panel .lp-result ul { margin: 8px 0 0; padding-left: 18px; }
+#learner-panel .lp-result li { margin: 3px 0; }
+#learner-panel .lp-note { color: #9aa4b2; font-size: 12px; margin: 10px 0 0; line-height: 1.5; }
+
 /* --- Browse / Save modal rows --- */
 .browse-save-row { display: flex; gap: 10px; margin-bottom: 14px; }
 .browse-save-row input { flex: 1; padding: 7px 10px; border-radius: 6px;

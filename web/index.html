@@ -439,6 +439,32 @@
             <span class="out-db" id="output-db">-inf dB</span>
         </section>
 
+        <!-- Learner panel (LoopProof): check your result against a
+             tutorial's reference state, export/share your state, and
+             jump in at the start of any tutorial step. Lives below the
+             device with the output strip — the hardware face itself is
+             unchanged. -->
+        <section id="learner-panel" aria-label="Learn: check your result">
+            <div class="lp-row">
+                <span class="out-label">LEARN</span>
+                <select id="lp-song" aria-label="Tutorial song"></select>
+                <button type="button" id="lp-check" class="lp-btn">Check my result</button>
+                <button type="button" id="lp-export" class="lp-btn">Export my state</button>
+                <button type="button" id="lp-copylink" class="lp-btn">Copy link to my state</button>
+            </div>
+            <div class="lp-row lp-starts-row">
+                <span class="lp-starts-label">Start at:</span>
+                <span id="lp-starts"></span>
+            </div>
+            <div id="lp-result" class="lp-result" aria-live="polite"></div>
+            <p class="lp-note">Following a LoopProof tutorial? Pick the song,
+                build the loop, then check your result against the reference
+                state from the video. A song is proven when a new player,
+                using only the video, reproduces the reference state exactly —
+                every step matching. Start links load the loop as it stands at
+                the start of that step.</p>
+        </section>
+
         <!-- Keyboard Shortcut Overlay Modal -->
         <div id="modal-keymap" class="modal-overlay hidden">
             <div class="modal-card">
@@ -492,6 +518,7 @@
 
     <script src="protocol.js"></script>
     <script src="audio.js"></script>
+    <script src="references.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
