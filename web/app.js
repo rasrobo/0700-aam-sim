@@ -1107,6 +1107,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 stepBtn.addEventListener("click", () => {
                     state.pattern[trackIdx][step] = !state.pattern[trackIdx][step];
+                    // Clearing a step clears its notes too — otherwise the
+                    // old pitches sound again if the step is reactivated.
+                    if (!state.pattern[trackIdx][step]) state.patternNotes[trackIdx][step] = null;
                     stepBtn.classList.toggle("active", state.pattern[trackIdx][step]);
                     if (state.pattern[trackIdx][step]) audio.triggerPad(trackIdx, 100);
                 });
