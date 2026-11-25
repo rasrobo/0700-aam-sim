@@ -1672,3 +1672,264 @@ body {
 .browse-row { display: flex; align-items: center; gap: 10px; padding: 7px 0;
   border-top: 1px solid rgba(255,255,255,0.07); }
 .browse-row span { flex: 1; }
+
+/* ============================================================
+   LCD presentation per the real 0700-AAM firmware (Music Tribe
+   Kick app, Default theme): dark greys #2B2B2B / #222222 /
+   #1F1F1F / #151515, amber #FFB608 titles + accents, white text,
+   #B2B2B2 secondary, blue #00AAEE selection. Scoped to the LCD
+   so the physical face keeps its own styling.
+   ============================================================ */
+#lcd-screen {
+    --screen-bg: #2b2b2b;
+    --screen-surface: #222222;
+    --screen-text: #ffffff;
+    --screen-text-dim: #b2b2b2;
+    --screen-accent: #ffb608;
+    --screen-accent-glow: rgba(255, 182, 8, 0.35);
+    --ruler-w: 64px;
+    font-family: "Myriad Pro", "Segoe UI", var(--font-ui);
+    border-color: #151515;
+}
+#lcd-content { padding: 10px 12px; }
+#lcd-screen .view-panel.active { gap: 8px; }
+
+/* --- Topbar (AppTopbar) --- */
+#lcd-topbar {
+    display: flex; align-items: stretch; gap: 8px;
+    background: #222222; border-bottom: 1px solid #151515;
+    padding: 5px 8px; min-height: 38px;
+}
+.tb-nav, .tb-right { display: flex; gap: 4px; align-items: center; }
+#lcd-topbar .tb-btn {
+    flex: none; background: #1f1f1f; border: 1px solid #151515;
+    border-bottom: 2px solid #151515; border-radius: 3px;
+    color: #b2b2b2; font-family: inherit; font-size: 12px; font-weight: 600;
+    padding: 6px 12px; cursor: pointer; letter-spacing: 0.4px;
+}
+#lcd-topbar .tb-btn:hover { color: #ffffff; }
+#lcd-topbar .tb-btn.active {
+    background: #2b2b2b; color: #ffb608; border-bottom: 2px solid #ffb608;
+}
+#lcd-topbar #tb-play.active { color: #ffb608; border-bottom-color: #ffb608; }
+.tb-project {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    color: #ffffff; font-size: 14px; font-weight: 600; letter-spacing: 1px;
+    background: #151515; border-radius: 3px; padding: 0 10px;
+    white-space: nowrap; overflow: hidden;
+}
+
+/* --- Statusbar (AppStatusbar) --- */
+#lcd-statusbar {
+    position: relative; display: flex; align-items: center; gap: 10px;
+    background: #222222; border-top: 1px solid #151515;
+    padding: 8px 10px 6px 10px; min-height: 46px;
+}
+.sb-progress {
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: #151515;
+}
+#sb-progress-fill { height: 100%; width: 0%; background: #ffb608; }
+.sb-stp { display: flex; gap: 12px; min-width: 0; }
+.sb-item { display: flex; flex-direction: column; min-width: 0; }
+.sb-item em, .sb-bbt em {
+    font-style: normal; font-size: 8px; font-weight: 700;
+    color: #b2b2b2; letter-spacing: 1px;
+}
+.sb-item strong {
+    font-size: 12px; color: #ffffff; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; max-width: 150px;
+}
+.sb-info {
+    flex: 1; text-align: center; font-size: 12.5px; color: #e8e8e8;
+    background: #000000; border-radius: 3px; padding: 7px 8px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sb-bbt { display: flex; flex-direction: column; align-items: flex-end; }
+.sb-bbt strong { font-size: 16px; font-weight: 800; color: #ffffff; letter-spacing: 1px; }
+
+/* --- Mode header (KickModeHeader: back + title) --- */
+.mode-header {
+    display: flex; align-items: center; gap: 10px; min-height: 30px;
+}
+.mh-back {
+    color: #ffb608; font-size: 15px; cursor: pointer; padding: 2px 6px;
+    background: #1f1f1f; border: 1px solid #151515; border-radius: 3px;
+}
+.mh-title { font-size: 16px; font-weight: 700; color: #ffb608; letter-spacing: 0.5px; }
+.mh-track { display: flex; align-items: center; gap: 8px; margin: 0 auto; }
+.mh-track strong { font-size: 13.5px; color: #ffffff; letter-spacing: 0.5px; }
+.mh-meta { margin-left: auto; font-size: 11px; color: #b2b2b2; letter-spacing: 0.5px; }
+.mh-spacer { flex: 1; }
+.mh-arrow {
+    background: #1f1f1f; border: 1px solid #151515; border-radius: 3px;
+    color: #ffb608; font-size: 11px; padding: 3px 8px; cursor: pointer;
+}
+
+/* --- Main Mode lists (AppMainmode) --- */
+.mm-tabs { display: flex; gap: 6px; align-items: center; }
+.mm-tab {
+    background: #1f1f1f; border: 1px solid #151515; border-radius: 3px;
+    color: #b2b2b2; font-family: inherit; font-size: 13.5px; font-weight: 600;
+    padding: 7px 22px; cursor: pointer;
+}
+.mm-tab.active { background: #ffb608; color: #1b1b1b; border-color: #ffb608; }
+.mm-spacer { flex: 1; }
+.mm-tool {
+    background: #1f1f1f; border: 1px solid #151515; border-radius: 3px;
+    color: #fe001a; font-family: inherit; font-size: 11.5px; font-weight: 700;
+    padding: 7px 14px; cursor: pointer; letter-spacing: 0.5px;
+}
+.mm-pane { display: flex; flex-direction: column; min-height: 0; flex: 1; }
+.mm-pane.hidden { display: none; }
+.mm-head {
+    display: grid; gap: 6px; padding: 4px 8px;
+    font-size: 10px; font-weight: 700; color: #b2b2b2; letter-spacing: 0.8px;
+    border-bottom: 1px solid #343434;
+}
+.mm-rows { overflow-y: auto; min-height: 0; }
+.mm-row {
+    display: grid; gap: 6px; align-items: center; padding: 0 8px;
+    color: #e8e8e8; border-bottom: 1px solid #1f1f1f; cursor: pointer;
+}
+.mm-row:hover { background: #363636; }
+.mm-row.selected { background: rgba(0, 170, 238, 0.16); box-shadow: inset 3px 0 0 #00aaee; }
+.mm-row .mm-name { color: #ffffff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seq-cols { grid-template-columns: 2.4fr 1.15fr 0.5fr 0.6fr 0.5fr 0.95fr 0.6fr 0.7fr; }
+#mm-seq-rows .mm-row { height: 36px; font-size: 13.5px; }
+#mm-seq-rows .mm-row #lcd-bpm { color: #ffb608; font-weight: 700; }
+.track-cols { grid-template-columns: 0.4fr 1.7fr 1.25fr 0.5fr 0.6fr 0.42fr 0.42fr; }
+#mm-track-rows .mm-row { height: 18px; font-size: 11.5px; cursor: pointer; }
+.prog-cols { grid-template-columns: 0.4fr 2fr 0.8fr 0.8fr; }
+#mm-prog-rows .mm-row { height: 18px; font-size: 11.5px; cursor: default; }
+.mm-ms {
+    width: 22px; height: 16px; font-size: 10px; font-weight: 800;
+    background: #1f1f1f; color: #b2b2b2; border: 1px solid #151515;
+    border-radius: 2px; cursor: pointer; padding: 0;
+}
+.mm-ms.on-mute { background: #fe001a; color: #ffffff; border-color: #fe001a; }
+.mm-ms.on-solo { background: #ffb608; color: #1b1b1b; border-color: #ffb608; }
+
+/* --- Menu (AppMenuOptions) --- */
+.menu-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: 1;
+}
+.menu-item {
+    background: #222222; border: 1px solid #151515; border-radius: 4px;
+    color: #ffffff; font-family: inherit; font-size: 14.5px; font-weight: 600;
+    cursor: pointer; min-height: 62px;
+}
+.menu-item:hover { border-color: #ffb608; color: #ffb608; }
+
+/* --- Grid View (AppGrid piano roll) --- */
+.grid-scroll { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.grid-ruler-row { display: flex; }
+.grid-corner { width: var(--ruler-w); flex: none; }
+.grid-beats { flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); }
+.grid-beats span {
+    text-align: center; font-size: 11px; font-weight: 700; color: #b2b2b2;
+    border-left: 1px solid #343434; padding: 1px 0;
+}
+.grid-main { position: relative; flex: 1; min-height: 0; overflow-y: auto; }
+.grid-rows { display: flex; flex-direction: column; gap: 3px; }
+.grid-row { display: flex; height: 31px; }
+.grid-ruler {
+    width: var(--ruler-w); flex: none; display: flex; align-items: center;
+    padding-left: 7px; background: #1f1f1f; color: #ffb608;
+    font-size: 14.5px; font-weight: 800; white-space: nowrap; overflow: hidden;
+}
+.grid-cells { flex: 1; display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; }
+.grid-cell { background: #151515; position: relative; cursor: pointer; }
+.grid-cell.beat { background: #1f1f1f; }
+.grid-block {
+    position: absolute; inset: 1px; border-radius: 2px;
+    background: linear-gradient(180deg, #f5ae0d, #ffa700);
+    color: #1b1b1b; font-size: 13px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+}
+.grid-empty { padding: 14px 8px; color: #b2b2b2; font-size: 12.5px; }
+.grid-playhead {
+    position: absolute; top: 0; bottom: 0; display: none; z-index: 3;
+    background: rgba(255, 255, 255, 0.10); border-left: 2px solid #ffffff;
+    pointer-events: none;
+}
+.grid-ph-tri {
+    width: 0; height: 0; margin: 0 auto;
+    border-left: 6px solid transparent; border-right: 6px solid transparent;
+    border-top: 8px solid #ffffff;
+}
+.grid-lane { display: flex; align-items: stretch; gap: 0; height: 28px; margin-top: 6px; }
+.lane-label {
+    width: var(--ruler-w); flex: none; font-size: 9px; font-weight: 700;
+    color: #b2b2b2; letter-spacing: 0.8px; display: flex; align-items: center;
+}
+.grid-lane-bars {
+    flex: 1; display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px;
+    align-items: end; background: #151515; padding: 2px 0;
+}
+.lane-bar { background: #ffb608; width: 55%; margin: 0 auto; min-height: 0; }
+.grid-now, .ss-now {
+    font-size: 14.5px; font-weight: 800; color: #ffb608; letter-spacing: 1px;
+    padding-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* --- Step Sequencer (StepSequencer) --- */
+.ss-control { display: flex; gap: 6px; }
+.lb-box {
+    background: #222222; border: 1px solid #151515; border-radius: 3px;
+    padding: 4px 9px; min-width: 0;
+}
+.lb-box.lb-wide { flex: 1.3; }
+.lb-title {
+    display: block; font-size: 8.5px; font-weight: 700; color: #b2b2b2;
+    letter-spacing: 1px; margin-bottom: 2px;
+}
+.lb-value {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12.5px; color: #ffffff; white-space: nowrap;
+}
+.ss-steps { display: flex; gap: 3px; flex: 1; min-height: 120px; }
+.ss-col { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ss-note-area {
+    flex: 1; position: relative; overflow: hidden; cursor: pointer;
+    border: 1px solid #343434;
+    background-image: repeating-linear-gradient(180deg,
+        transparent 0, transparent calc(100% / 6 - 1px),
+        rgba(178, 178, 178, 0.22) calc(100% / 6 - 1px),
+        rgba(178, 178, 178, 0.22) calc(100% / 6));
+}
+.ss-note-area.on-beat { background-color: #1f1f1f; }
+.ss-note-area.off-beat { background-color: #000000; }
+.ss-vel-bar {
+    position: absolute; bottom: 0; left: 16%; right: 16%;
+    background: linear-gradient(180deg, #ff2a00, #ffb608);
+    border-radius: 2px 2px 0 0;
+}
+.ss-note-label {
+    position: absolute; top: 3px; left: 0; right: 0; text-align: center;
+    font-size: 12px; font-weight: 800; color: #ffffff;
+    text-shadow: 0 1px 3px #000000; pointer-events: none;
+}
+#view-stepseq .step-btn {
+    height: 42px; width: auto; display: flex; align-items: center; justify-content: center;
+    background: #222222; color: #b2b2b2; border: 1px solid #151515; border-radius: 3px;
+    font-size: 15.5px; font-weight: 800; cursor: pointer; box-shadow: none;
+}
+#view-stepseq .step-btn.group-beat { border-color: #3d3d3d; }
+#view-stepseq .step-btn.active {
+    background: #ffb608; color: #1b1b1b; border-color: #ffb608; box-shadow: none;
+}
+#view-stepseq .step-btn.current-step {
+    outline: 2px solid #ffffff; outline-offset: -2px;
+    border-color: #ffffff; box-shadow: none;
+}
+#view-stepseq .stepseq-actions button {
+    background: #1f1f1f; border: 1px solid #151515; border-radius: 3px;
+    color: #b2b2b2; font-family: inherit; font-size: 11px; font-weight: 700;
+    padding: 5px 12px; cursor: pointer;
+}
+
+/* --- Retheme touches for the kept views --- */
+#view-prefs .prefs-buttons button, #view-prefs .prefs-buttons a { border-color: #ffb608; }
+#view-sampler .waveform-display { background: #151515; }
+#lcd-screen .stat-card, #lcd-screen .lcd-pad-monitor { border-color: #151515; }

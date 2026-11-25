@@ -66,88 +66,113 @@
                     <!-- 7-INCH TOUCHSCREEN DISPLAY (800 x 480) -->
                     <div id="screen-bezel">
                         <div id="lcd-screen">
-                            <!-- LCD Top Header -->
-                            <div id="lcd-header">
-                                <div class="lcd-project-info">
-                                    <span class="tag">PRJ:</span> <span class="val">SESSION_01</span>
-                                    <span class="sep">|</span>
-                                    <span class="tag">TRK:</span> <span class="val" id="lcd-track-name">01: DRUMS 909</span>
+                            <!-- LCD Topbar (per 0700-AAM firmware AppTopbar:
+                                 nav buttons left, project name centre,
+                                 play / browse / settings right) -->
+                            <div id="lcd-topbar">
+                                <div class="tb-nav">
+                                    <button class="tb-btn lcd-tab" data-view="menu">MENU</button>
+                                    <button class="tb-btn lcd-tab active" data-view="main">MAIN</button>
+                                    <button class="tb-btn lcd-tab" data-view="grid">GRID</button>
+                                    <button class="tb-btn lcd-tab" data-view="stepseq">STEP SEQ</button>
                                 </div>
-                                <div class="lcd-tempo-info">
-                                    <span class="bpm-badge" id="lcd-bpm">120.0 BPM</span>
-                                    <span class="time-sig">4/4</span>
-                                    <span class="bars">BAR: <strong id="lcd-bar-display">1.1.1</strong></span>
-                                </div>
-                                <div class="lcd-engine-tag">
-                                    <span class="live-dot">●</span> COM PROTOCOL V1.0
+                                <div class="tb-project" id="tb-project-name">SESSION_01</div>
+                                <div class="tb-right">
+                                    <button class="tb-btn" id="tb-play">▶ PLAY</button>
+                                    <button class="tb-btn" id="tb-browse">BROWSE</button>
+                                    <button class="tb-btn lcd-tab" data-view="prefs">SETTINGS</button>
                                 </div>
                             </div>
 
-                            <!-- Screen View Navigation Tabs -->
-                            <nav id="lcd-nav">
-                                <button class="lcd-tab active" data-view="main">MAIN</button>
-                                <button class="lcd-tab" data-view="stepseq">GRID / STEP SEQ</button>
-                                <button class="lcd-tab" data-view="mixer">TRACK MIX</button>
-                                <button class="lcd-tab" data-view="sampler">SAMPLER</button>
-                                <button class="lcd-tab" data-view="padedit">PAD EDIT</button>
-                                <button class="lcd-tab" data-view="prefs">PREFS</button>
-                            </nav>
-
                             <!-- LCD Screen Body Views -->
                             <div id="lcd-content">
-                                <!-- VIEW 1: MAIN -->
+                                <!-- VIEW 1: MAIN MODE (per firmware AppMainmode:
+                                     Sequence / Track / Program tabs over lists) -->
                                 <div class="view-panel active" id="view-main">
-                                    <div class="main-stats-grid">
-                                        <div class="stat-card">
-                                            <div class="card-title">SEQUENCE</div>
-                                            <div class="card-val" id="main-seq-name">Seq 01 - Main Groove</div>
-                                            <div class="card-sub">Length: 2 Bars (32 Steps)</div>
-                                        </div>
-                                        <div class="stat-card">
-                                            <div class="card-title">QUANTIZATION (TC)</div>
-                                            <div class="card-val" id="main-tc-val">1/16 Standard</div>
-                                            <div class="card-sub">Swing: 54% | Latch: Off</div>
-                                        </div>
-                                        <div class="stat-card">
-                                            <div class="card-title">ACTIVE BANK</div>
-                                            <div class="card-val" id="main-active-bank">BANK A (Pads 1-16)</div>
-                                            <div class="card-sub">Velocity: Dynamic (127 Max)</div>
-                                        </div>
+                                    <div class="mm-tabs">
+                                        <button class="mm-tab active" data-mmtab="seq">Sequence</button>
+                                        <button class="mm-tab" data-mmtab="track">Track</button>
+                                        <button class="mm-tab" data-mmtab="program">Program</button>
+                                        <span class="mm-spacer"></span>
+                                        <button class="mm-tool" id="mm-del-seq" title="Clear the selected sequence's pattern">DELETE</button>
                                     </div>
-
-                                    <!-- Miniature Interactive Pad Monitor -->
-                                    <div class="lcd-pad-monitor">
-                                        <div class="monitor-title">HARDWARE CONTROL SURFACE MATRIX</div>
-                                        <div class="mini-pad-grid" id="mini-pads">
-                                            <!-- 16 mini pads mirrored by JS -->
-                                        </div>
+                                    <div class="mm-pane" id="mm-pane-seq">
+                                        <div class="mm-head seq-cols"><span>NAME</span><span>BPM</span><span>BARS</span><span>START</span><span>END</span><span>TRANSPOSE</span><span>LOOP</span><span>GLOBAL</span></div>
+                                        <div class="mm-rows" id="mm-seq-rows"></div>
                                     </div>
-
-                                    <!-- Waveform / Spectrum Visualizer -->
-                                    <div class="lcd-scope-card">
-                                        <canvas id="scope-canvas" width="760" height="90"></canvas>
+                                    <div class="mm-pane hidden" id="mm-pane-track">
+                                        <div class="mm-head track-cols"><span>#</span><span>TRACK</span><span>PROG</span><span>LEN</span><span>TRANS</span><span>MUTE</span><span>SOLO</span></div>
+                                        <div class="mm-rows" id="mm-track-rows"></div>
+                                    </div>
+                                    <div class="mm-pane hidden" id="mm-pane-program">
+                                        <div class="mm-head prog-cols"><span>#</span><span>PROGRAM</span><span>TYPE</span><span>ROOT</span></div>
+                                        <div class="mm-rows" id="mm-prog-rows"></div>
                                     </div>
                                 </div>
 
-                                <!-- VIEW 2: STEP SEQUENCER -->
+                                <!-- VIEW: MENU (per firmware AppMenuOptions —
+                                     the modes this simulator has screens for) -->
+                                <div class="view-panel" id="view-menu">
+                                    <div class="mode-header"><span class="mh-back" data-nav="main">◀</span><span class="mh-title">Menu</span></div>
+                                    <div class="menu-grid">
+                                        <button class="menu-item" data-nav="main">Main Mode</button>
+                                        <button class="menu-item" data-nav="grid">Grid View</button>
+                                        <button class="menu-item" data-nav="stepseq">Step Sequencer</button>
+                                        <button class="menu-item" data-nav="mixer">Track Mixer</button>
+                                        <button class="menu-item" data-nav="sampler">Sample Editor</button>
+                                        <button class="menu-item" data-nav="padedit">Program Edit</button>
+                                        <button class="menu-item" id="menu-browse">File Browser</button>
+                                        <button class="menu-item" data-nav="prefs">Settings</button>
+                                    </div>
+                                </div>
+
+                                <!-- VIEW: GRID (per firmware AppGrid — piano roll
+                                     for the selected track, playhead overlay) -->
+                                <div class="view-panel" id="view-grid">
+                                    <div class="mode-header">
+                                        <span class="mh-back" data-nav="main">◀</span><span class="mh-title">Grid View</span>
+                                        <span class="mh-track"><button class="mh-arrow" id="grid-track-prev">◀</button><strong id="grid-track-name">TRK 01 · 808 KICK</strong><button class="mh-arrow" id="grid-track-next">▶</button></span>
+                                        <span class="mh-meta">BARS 1 · DIV 1/16</span>
+                                    </div>
+                                    <div class="grid-scroll">
+                                        <div class="grid-ruler-row"><div class="grid-corner"></div><div class="grid-beats"><span>1</span><span>2</span><span>3</span><span>4</span></div></div>
+                                        <div class="grid-main">
+                                            <div class="grid-rows" id="grid-rows"></div>
+                                            <div class="grid-playhead" id="grid-playhead"><div class="grid-ph-tri"></div></div>
+                                        </div>
+                                    </div>
+                                    <div class="grid-lane"><span class="lane-label">VELOCITY</span><div class="grid-lane-bars" id="grid-lane-bars"></div></div>
+                                    <div class="grid-now" id="grid-now">STEP -- · —</div>
+                                </div>
+
+                                <!-- VIEW 2: STEP SEQUENCER (per firmware
+                                     StepSequencer — one track, velocity bars
+                                     over numbered step buttons) -->
                                 <div class="view-panel" id="view-stepseq">
-                                    <div class="stepseq-toolbar">
-                                        <span>TRACK: <strong>01 DRUMS</strong></span>
-                                        <span>ACTIVE INSTRUMENT: <strong id="stepseq-inst-name">Pad 1: 808 Kick</strong></span>
-                                        <div class="stepseq-actions">
+                                    <div class="mode-header">
+                                        <span class="mh-back" data-nav="main">◀</span><span class="mh-title">Step Sequencer</span>
+                                        <span class="mh-spacer"></span>
+                                        <span class="stepseq-actions">
                                             <button id="btn-clear-seq">CLEAR</button>
                                             <button id="btn-random-seq">RANDOMIZE</button>
-                                        </div>
+                                        </span>
                                     </div>
-                                    <div class="stepseq-scroll-container">
-                                        <div class="stepseq-grid" id="stepseq-grid">
-                                            <!-- Generated 16 tracks x 16 steps matrix -->
-                                        </div>
+                                    <div class="ss-control">
+                                        <div class="lb-box lb-wide"><span class="lb-title">TRACK</span><div class="lb-value"><button class="mh-arrow" id="ss-track-prev">◀</button><strong id="stepseq-inst-name">Pad 1: 808 Kick</strong><button class="mh-arrow" id="ss-track-next">▶</button></div></div>
+                                        <div class="lb-box"><span class="lb-title">TRACK LENGTH</span><div class="lb-value"><strong>16 Steps</strong></div></div>
+                                        <div class="lb-box"><span class="lb-title">TIME DIV (TC)</span><div class="lb-value"><strong id="main-tc-val">1/16 Standard</strong></div></div>
+                                        <div class="lb-box"><span class="lb-title">BANK</span><div class="lb-value"><strong id="main-active-bank">BANK A (Pads 1-16)</strong></div></div>
+                                        <div class="lb-box"><span class="lb-title">PARAMETER</span><div class="lb-value"><strong>Velocity</strong></div></div>
                                     </div>
+                                    <div class="ss-steps" id="stepseq-grid">
+                                        <!-- Generated: 16 step columns for the selected track -->
+                                    </div>
+                                    <div class="ss-now" id="ss-now">STEP -- · —</div>
                                 </div>
 
                                 <!-- VIEW 3: TRACK MIXER -->
                                 <div class="view-panel" id="view-mixer">
+                                    <div class="mode-header"><span class="mh-back" data-nav="main">◀</span><span class="mh-title">Track Mixer</span></div>
                                     <div class="mixer-channels-container" id="mixer-strips">
                                         <!-- 16 Channel Faders with VU Meters -->
                                     </div>
@@ -155,6 +180,7 @@
 
                                 <!-- VIEW 4: SAMPLER -->
                                 <div class="view-panel" id="view-sampler">
+                                    <div class="mode-header"><span class="mh-back" data-nav="main">◀</span><span class="mh-title">Sample Editor</span></div>
                                     <div class="sampler-top">
                                         <div class="sample-name">SAMPLE: <code>acoustic_kick_punch_48k.wav</code></div>
                                         <div class="sample-tools">
@@ -176,6 +202,7 @@
 
                                 <!-- VIEW 5: PAD EDIT -->
                                 <div class="view-panel" id="view-padedit">
+                                    <div class="mode-header"><span class="mh-back" data-nav="main">◀</span><span class="mh-title">Program Edit</span></div>
                                     <div class="padedit-grid">
                                         <div class="edit-group">
                                             <div class="group-title">FILTER ENVELOPE</div>
@@ -197,6 +224,7 @@
 
                                 <!-- VIEW 6: PREFERENCES -->
                                 <div class="view-panel" id="view-prefs">
+                                    <div class="mode-header"><span class="mh-back" data-nav="main">◀</span><span class="mh-title">Settings</span></div>
                                     <div class="prefs-container">
                                         <h3>0700-AAM Sovereign Desktop Firmware Harness</h3>
                                         <table class="prefs-table">
@@ -215,6 +243,20 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+
+                            <!-- LCD Statusbar (per firmware AppStatusbar:
+                                 progress line on top, STP selection left,
+                                 info box centre, BAR : BEAT : TICK right) -->
+                            <div id="lcd-statusbar">
+                                <div class="sb-progress"><div id="sb-progress-fill"></div></div>
+                                <div class="sb-stp">
+                                    <span class="sb-item"><em>SEQ</em><strong id="main-seq-name">Seq 01 - Main Groove</strong></span>
+                                    <span class="sb-item"><em>TRK</em><strong id="sb-track-name">01 · 808 Kick</strong></span>
+                                    <span class="sb-item"><em>PRG</em><strong id="sb-prog-name">kick</strong></span>
+                                </div>
+                                <div class="sb-info" id="sb-info">Main Mode</div>
+                                <div class="sb-bbt"><em>BAR : BEAT : TICK</em><strong id="sb-bbt-val">1 : 01 : 000</strong></div>
                             </div>
                         </div>
                     </div>

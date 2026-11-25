@@ -221,6 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function triggerPadStrike(padIndex, velocity = 127, sendPacket = true, fromSequencer = false) {
         audio.ensureContext();
         if (!fromSequencer) state.lastStruckPad = padIndex;
+        if (!fromSequencer) lcdFollowPad(padIndex);
 
         let effectiveVel = velocity;
         if (state.fullLevel) effectiveVel = 127;
@@ -258,7 +259,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (PITCHED_PADS.has(padIndex)) state.lastPad = padIndex;
 
             // Update active instrument in Step Sequencer view
-            if (instNameTag && audio.instruments[padIndex]) {
+            // (user strikes only — sequencer playback must not keep
+            // rewriting the Step Sequencer's TRACK box)
+            if (!fromSequencer && instNameTag && audio.instruments[padIndex]) {
                 instNameTag.innerText = `Pad ${padIndex + 1}: ${audio.instruments[padIndex].name}`;
             }
         }
@@ -687,6 +690,7 @@ document.addEventListener("DOMContentLoaded", () => {
         state.pattern = data.pattern;
         state.patternNotes = data.patternNotes;
         refreshStepGrid();
+        refreshLcd();
     };
 
     // TC ON/OFF: timing correction for captured strikes (see the
@@ -729,6 +733,7 @@ document.addEventListener("DOMContentLoaded", () => {
             state.patternNotes[t].fill(null);
         }
         refreshStepGrid();
+        refreshLcd();
         flashBtn(btnErase);
         sendHwPacket(ComProtocol.CommandId.ERASE, [state.lastStruckPad]);
     });
@@ -788,6 +793,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (label) label.innerText = `Seq 0${state.currentSeq + 1}` + (state.currentSeq === 0 ? " - Main Groove" : " - User");
         flashBtn(btnNextSeq);
         sendHwPacket(ComProtocol.CommandId.NEXT_SEQ, [state.currentSeq]);
+        refreshLcd();
     });
 
     // BACK / UNDO button: back to the main screen.
@@ -950,6 +956,13 @@ document.addEventListener("DOMContentLoaded", () => {
         btnRec.classList.toggle("active", state.isRecording);
         btnOverdub.classList.toggle("active", state.isOverdubbing);
 
+        // Topbar play control mirrors the transport (firmware AppTopbar).
+        const tbPlay = document.getElementById("tb-play");
+        if (tbPlay) {
+            tbPlay.textContent = state.isPlaying ? "❚❚ PLAYING" : "▶ PLAY";
+            tbPlay.classList.toggle("active", state.isPlaying);
+        }
+
         if (state.isPlaying) {
             audio.ensureContext();
             startSequencerClock();
@@ -1024,12 +1037,10 @@ document.addEventListener("DOMContentLoaded", () => {
             // Update LCD step sequencer cursor
             updateStepCursor(step);
 
-            // Update bar display
-            const bar = Math.floor(step / 16) + 1;
-            const beat = Math.floor((step % 16) / 4) + 1;
-            const sub = (step % 4) + 1;
-            const barDisplay = document.getElementById("lcd-bar-display");
-            if (barDisplay) barDisplay.innerText = `${bar}.${beat}.${sub}`;
+            // Update the statusbar playhead readout (BAR : BEAT : TICK,
+            // per the firmware's Locate control) + grid playhead + the
+            // "now" lines. Defined in the LCD-to-spec section below.
+            lcdPlayhead(step);
 
             // Advance step
             state.currentStep = (state.currentStep + 1) % state.totalSteps;
@@ -1042,6 +1053,7 @@ document.addEventListener("DOMContentLoaded", () => {
             seqInterval = null;
         }
         updateStepCursor(-1);
+        lcdPlayhead(-1);
     }
 
     function updateStepCursor(currentStep) {
@@ -1059,6 +1071,7 @@ document.addEventListener("DOMContentLoaded", () => {
         state.activeView = viewId;
         lcdTabs.forEach(tab => tab.classList.toggle("active", tab.dataset.view === viewId));
         viewPanels.forEach(panel => panel.classList.toggle("active", panel.id === `view-${viewId}`));
+        lcdOnView(viewId);
     }
 
     lcdTabs.forEach(tab => {
@@ -1072,54 +1085,402 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-sampler").addEventListener("click", () => switchView("sampler"));
     document.getElementById("btn-sample-edit").addEventListener("click", () => switchView("sampler"));
     document.getElementById("btn-program-edit").addEventListener("click", () => switchView("padedit"));
-    document.getElementById("btn-menu").addEventListener("click", () => switchView("prefs"));
+    document.getElementById("btn-menu").addEventListener("click", () => switchView("menu"));
 
-    // --- Build Mini Pad Monitor in Main View ---
-    const miniPadsContainer = document.getElementById("mini-pads");
-    if (miniPadsContainer) {
-        for (let i = 0; i < 16; i++) {
-            const mp = document.createElement("div");
-            mp.className = "mini-pad";
-            mp.innerText = `P${i + 1}`;
-            miniPadsContainer.appendChild(mp);
+    // ============================================================
+    // LCD presentation, rebuilt to the real 0700-AAM firmware's
+    // spec — Music Tribe's open-source Kick app (modules/kick_ui):
+    //  * AppTopbar: nav left, project name centre, play/browse/
+    //    settings right; tempo is NOT in the chrome (it is a
+    //    per-sequence value, shown in Main Mode's Sequence list).
+    //  * AppStatusbar: playhead progress line on top, STP
+    //    (selected sequence/track/program) left, info box centre,
+    //    BAR : BEAT : TICK right (Locate::getBarBeatTickInfo
+    //    format: bar : 2-digit beat : 3-digit tick, 960 ppq).
+    //  * Main Mode (AppMainmode): Sequence / Track / Program tabs
+    //    over lists — no pattern view, no oscilloscope.
+    //  * Grid View (AppGrid): piano roll for the selected track —
+    //    note-name ruler, note blocks, white playhead line +
+    //    triangle, velocity parameter lane underneath.
+    //  * Step Sequencer (StepSequencer): ONE track — a note area
+    //    with a velocity bar (gradient #FF2A00 -> #FFB608) over a
+    //    numbered step button; beat columns shaded differently.
+    //  * The oscilloscope is gone from the LCD: in the firmware a
+    //    waveform appears only in the Sample Editor and Looper.
+    // ============================================================
+    let viewTrack = 0; // track shown by Grid View + Step Sequencer
+    const PROG_NAMES = ["kick", "snare", "hat_closed", "clap",
+        "hook_fs4", "hook_e4", "hook_gs4", "mel_b3", "mel_cs4",
+        "mel_d4", "mel_e4", "mel_fs4", "bass_fs1", "bass_e1",
+        "bass_gs1", "stab_fsm"]; // samples/manifest.json pad map
+    const PROG_ROOTS = { 4: 66, 5: 64, 6: 68, 7: 59, 8: 61, 9: 62,
+        10: 64, 11: 66, 12: 42, 13: 40, 14: 44, 15: 54 };
+    const progName = (t) => (audio.samplePads && audio.samplePads[t]) || PROG_NAMES[t];
+    const progRoot = (t) => (audio.sampleNotes && audio.sampleNotes[t] != null)
+        ? audio.sampleNotes[t] : PROG_ROOTS[t];
+    const pad2 = (n) => String(n).padStart(2, "0");
+    const trackLabel = (t) => `${pad2(t + 1)} · ${audio.instruments[t].name}`;
+    const seqName = (i) => `Seq 0${i + 1}` + (i === 0 ? " - Main Groove" : " - User");
+    const VIEW_TITLES = { main: "Main Mode", menu: "Menu", grid: "Grid View",
+        stepseq: "Step Sequencer", mixer: "Track Mixer", sampler: "Sample Editor",
+        padedit: "Program Edit", prefs: "Settings" };
+
+    function setInfo(text) {
+        const el = document.getElementById("sb-info");
+        if (el) el.textContent = text;
+    }
+
+    function renderSTP() {
+        const trk = document.getElementById("sb-track-name");
+        if (trk) trk.textContent = trackLabel(viewTrack);
+        const prg = document.getElementById("sb-prog-name");
+        if (prg) prg.textContent = progName(viewTrack);
+    }
+
+    // --- Main Mode: Sequence list (columns per AppSequenceComponent:
+    // name, bpm, bars, start, end, transpose, loop, global) ---
+    function renderSeqRows() {
+        const wrap = document.getElementById("mm-seq-rows");
+        if (!wrap) return;
+        wrap.innerHTML = "";
+        for (let i = 0; i < 4; i++) {
+            const row = document.createElement("div");
+            row.className = "mm-row seq-cols" + (i === state.currentSeq ? " selected" : "");
+            const slot = seqSlots[i];
+            const bpmCell = i === state.currentSeq
+                ? `<span id="lcd-bpm">${state.bpm.toFixed(1)} BPM</span>`
+                : `<span>${slot && slot.bpm != null ? slot.bpm.toFixed(1) + " BPM" : "—"}</span>`;
+            row.innerHTML = `<span class="mm-name">${seqName(i)}</span>${bpmCell}` +
+                `<span>1</span><span>1</span><span>1</span><span>0</span><span>ON</span>` +
+                `<span>${i === state.currentSeq ? "ON" : "—"}</span>`;
+            row.addEventListener("click", () => selectSequence(i));
+            wrap.appendChild(row);
         }
     }
 
-    // --- Build 16x16 Step Sequencer Grid ---
-    const stepseqGrid = document.getElementById("stepseq-grid");
-    if (stepseqGrid) {
-        audio.instruments.forEach((instr, trackIdx) => {
+    // Same slot semantics as the NEXT SEQ hardware button: leaving a
+    // slot saves it; entering a fresh slot starts empty.
+    function selectSequence(i) {
+        if (i === state.currentSeq) return;
+        seqSlots[state.currentSeq] = { ...clonePattern(), bpm: state.bpm };
+        state.currentSeq = i;
+        const slot = seqSlots[state.currentSeq];
+        if (slot) {
+            applyPattern(JSON.parse(JSON.stringify(slot)));
+            state.bpm = slot.bpm;
+        } else {
+            applyPattern({ pattern: Array.from({ length: 16 }, () => new Array(16).fill(false)),
+                           patternNotes: Array.from({ length: 16 }, () => new Array(16).fill(null)) });
+        }
+        const label = document.getElementById("main-seq-name");
+        if (label) label.innerText = seqName(i);
+        sendHwPacket(ComProtocol.CommandId.NEXT_SEQ, [state.currentSeq]);
+        refreshLcd();
+    }
+
+    // --- Main Mode: Track list (name, program, length, transpose,
+    // mute, solo — mute/solo wired to the mixer state) ---
+    function renderTrackRows() {
+        const wrap = document.getElementById("mm-track-rows");
+        if (!wrap) return;
+        wrap.innerHTML = "";
+        audio.instruments.forEach((instr, t) => {
             const row = document.createElement("div");
-            row.className = "stepseq-row";
-
-            const label = document.createElement("div");
-            label.className = "step-label";
-            label.innerText = `P${trackIdx + 1}: ${instr.name}`;
-            row.appendChild(label);
-
-            for (let step = 0; step < 16; step++) {
-                const stepBtn = document.createElement("div");
-                stepBtn.className = "step-btn";
-                if (step % 4 === 0) stepBtn.classList.add("group-beat");
-                if (state.pattern[trackIdx][step]) stepBtn.classList.add("active");
-                stepBtn.dataset.track = trackIdx;
-                stepBtn.dataset.step = step;
-
-                stepBtn.addEventListener("click", () => {
-                    state.pattern[trackIdx][step] = !state.pattern[trackIdx][step];
-                    // Clearing a step clears its notes too — otherwise the
-                    // old pitches sound again if the step is reactivated.
-                    if (!state.pattern[trackIdx][step]) state.patternNotes[trackIdx][step] = null;
-                    stepBtn.classList.toggle("active", state.pattern[trackIdx][step]);
-                    if (state.pattern[trackIdx][step]) audio.triggerPad(trackIdx, 100);
-                });
-
-                row.appendChild(stepBtn);
-            }
-
-            stepseqGrid.appendChild(row);
+            row.className = "mm-row track-cols" + (t === viewTrack ? " selected" : "");
+            row.innerHTML = `<span>${pad2(t + 1)}</span><span class="mm-name">${instr.name}</span>` +
+                `<span>${progName(t)}</span><span>16</span><span>0</span>`;
+            const mBtn = document.createElement("button");
+            mBtn.className = "mm-ms" + (state.mixer[t].mute ? " on-mute" : "");
+            mBtn.textContent = "M";
+            mBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                state.mixer[t].mute = !state.mixer[t].mute;
+                const strip = document.querySelectorAll("#mixer-strips .mixer-strip")[t];
+                const mb = strip ? strip.querySelector(".strip-btn.mute") : null;
+                if (mb) mb.classList.toggle("active", state.mixer[t].mute);
+                renderTrackRows();
+            });
+            const sBtn = document.createElement("button");
+            sBtn.className = "mm-ms" + (state.mixer[t].solo ? " on-solo" : "");
+            sBtn.textContent = "S";
+            sBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                state.mixer[t].solo = !state.mixer[t].solo;
+                const strip = document.querySelectorAll("#mixer-strips .mixer-strip")[t];
+                const sb = strip ? strip.querySelector(".strip-btn.solo") : null;
+                if (sb) sb.classList.toggle("active", state.mixer[t].solo);
+                renderTrackRows();
+            });
+            row.appendChild(mBtn);
+            row.appendChild(sBtn);
+            row.addEventListener("click", () => {
+                viewTrack = t;
+                renderSTP(); renderTrackRows(); renderGrid(); renderStepSeq();
+            });
+            wrap.appendChild(row);
         });
     }
+
+    // --- Main Mode: Program list (kit programs; types per the
+    // firmware's create-program dialog: DRUM / KEY ...) ---
+    function renderProgRows() {
+        const wrap = document.getElementById("mm-prog-rows");
+        if (!wrap) return;
+        wrap.innerHTML = "";
+        for (let t = 0; t < 16; t++) {
+            const row = document.createElement("div");
+            row.className = "mm-row prog-cols";
+            const root = progRoot(t);
+            row.innerHTML = `<span>${pad2(t + 1)}</span><span class="mm-name">${progName(t)}</span>` +
+                `<span>${t < 4 ? "DRUM" : "KEY"}</span><span>${root != null ? noteName(root) : "—"}</span>`;
+            wrap.appendChild(row);
+        }
+    }
+
+    // --- Grid View: piano roll for the selected track ---
+    function trackPitches(t) {
+        const set = new Set();
+        for (let s = 0; s < 16; s++) {
+            const ns = state.patternNotes[t][s];
+            if (state.pattern[t][s] && ns) ns.forEach(n => set.add(n));
+        }
+        return [...set].sort((a, b) => b - a);
+    }
+
+    function renderGrid() {
+        const nameEl = document.getElementById("grid-track-name");
+        if (nameEl) nameEl.textContent = `TRK ${pad2(viewTrack + 1)} · ${audio.instruments[viewTrack].name.toUpperCase()}`;
+        const rowsEl = document.getElementById("grid-rows");
+        if (!rowsEl) return;
+        rowsEl.innerHTML = "";
+        const t = viewTrack;
+        const pitches = trackPitches(t);
+        const hasUnpitched = state.pattern[t].some((on, s) => on && !(state.patternNotes[t][s] && state.patternNotes[t][s].length));
+        const mkRow = (label, note) => { // note === null: unpitched-hit row
+            const row = document.createElement("div");
+            row.className = "grid-row";
+            const ruler = document.createElement("div");
+            ruler.className = "grid-ruler";
+            ruler.textContent = label;
+            row.appendChild(ruler);
+            const cells = document.createElement("div");
+            cells.className = "grid-cells";
+            for (let s = 0; s < 16; s++) {
+                const cell = document.createElement("div");
+                cell.className = "grid-cell" + (s % 4 === 0 ? " beat" : "");
+                const ns = state.patternNotes[t][s];
+                const has = !!state.pattern[t][s] && (note === null
+                    ? !(ns && ns.length)
+                    : !!(ns && ns.includes(note)));
+                if (has) {
+                    const block = document.createElement("div");
+                    block.className = "grid-block";
+                    if (note !== null) block.textContent = noteName(note);
+                    cell.appendChild(block);
+                }
+                cell.addEventListener("click", () => {
+                    if (note === null) {
+                        state.pattern[t][s] = !state.pattern[t][s];
+                        if (!state.pattern[t][s]) state.patternNotes[t][s] = null;
+                        if (state.pattern[t][s]) audio.triggerPad(t, 100);
+                    } else {
+                        const cur = state.pattern[t][s] && state.patternNotes[t][s]
+                            ? [...state.patternNotes[t][s]] : [];
+                        const at = cur.indexOf(note);
+                        if (at >= 0) {
+                            cur.splice(at, 1);
+                            if (cur.length) state.patternNotes[t][s] = cur;
+                            else { state.pattern[t][s] = false; state.patternNotes[t][s] = null; }
+                        } else {
+                            cur.push(note);
+                            state.pattern[t][s] = true;
+                            state.patternNotes[t][s] = cur.sort((a, b) => a - b);
+                            audio.triggerPad(t, 100);
+                        }
+                    }
+                    renderGrid(); renderStepSeq(); refreshStepGrid();
+                });
+                cells.appendChild(cell);
+            }
+            row.appendChild(cells);
+            rowsEl.appendChild(row);
+        };
+        pitches.forEach(n => mkRow(noteName(n), n));
+        if (hasUnpitched || pitches.length === 0) {
+            mkRow(pitches.length === 0 ? audio.instruments[t].name : "HIT", null);
+        }
+        if (pitches.length === 0 && !hasUnpitched) {
+            const empty = document.createElement("div");
+            empty.className = "grid-empty";
+            empty.textContent = "No notes in this track — click a cell to add a hit, or strike the pad with REC / OVERDUB.";
+            rowsEl.appendChild(empty);
+        }
+        // Velocity parameter lane (pattern steps play at velocity 110).
+        const lane = document.getElementById("grid-lane-bars");
+        if (lane) {
+            lane.innerHTML = "";
+            for (let s = 0; s < 16; s++) {
+                const bar = document.createElement("div");
+                bar.className = "lane-bar";
+                bar.style.height = state.pattern[t][s] ? `${(110 / 127) * 100}%` : "0%";
+                lane.appendChild(bar);
+            }
+        }
+    }
+
+    // --- Step Sequencer: one track, velocity bars over step buttons ---
+    function renderStepSeq() {
+        const grid = document.getElementById("stepseq-grid");
+        if (!grid) return;
+        grid.innerHTML = "";
+        const t = viewTrack;
+        for (let s = 0; s < 16; s++) {
+            const col = document.createElement("div");
+            col.className = "ss-col";
+            const area = document.createElement("div");
+            area.className = "ss-note-area " + (s % 4 === 0 ? "on-beat" : "off-beat");
+            if (state.pattern[t][s]) {
+                const bar = document.createElement("div");
+                bar.className = "ss-vel-bar";
+                bar.style.height = `${(110 / 127) * 100}%`;
+                area.appendChild(bar);
+                const ns = state.patternNotes[t][s];
+                if (ns && ns.length) {
+                    const lab = document.createElement("div");
+                    lab.className = "ss-note-label";
+                    lab.textContent = [...ns].sort((a, b) => a - b).map(noteName).join(" ");
+                    area.appendChild(lab);
+                }
+            }
+            const btn = document.createElement("div");
+            btn.className = "step-btn" + (s % 4 === 0 ? " group-beat" : "");
+            btn.dataset.track = t;
+            btn.dataset.step = s;
+            btn.textContent = s + 1;
+            if (state.pattern[t][s]) btn.classList.add("active");
+            const toggle = () => {
+                state.pattern[t][s] = !state.pattern[t][s];
+                // Clearing a step clears its notes too — otherwise the
+                // old pitches sound again if the step is reactivated.
+                if (!state.pattern[t][s]) state.patternNotes[t][s] = null;
+                if (state.pattern[t][s]) audio.triggerPad(t, 100);
+                renderStepSeq(); renderGrid();
+                if (state.isPlaying) lcdPlayhead(state.currentStep);
+            };
+            btn.addEventListener("click", toggle);
+            area.addEventListener("click", toggle);
+            col.appendChild(area);
+            col.appendChild(btn);
+            grid.appendChild(col);
+        }
+    }
+
+    function refreshLcd() {
+        renderSTP(); renderSeqRows(); renderTrackRows();
+        renderProgRows(); renderGrid(); renderStepSeq();
+    }
+
+    function lcdOnView(viewId) {
+        setInfo(VIEW_TITLES[viewId] || "");
+        refreshLcd();
+    }
+
+    // A user pad strike selects that pad's track on the LCD
+    // (the sim's lastStruckPad semantics, made visible).
+    function lcdFollowPad(padIndex) {
+        viewTrack = padIndex;
+        renderSTP(); renderGrid(); renderStepSeq(); renderTrackRows();
+    }
+
+    // Playhead readout, driven by the sequencer clock (not a free
+    // animation). step < 0 = stopped.
+    function lcdPlayhead(step) {
+        const bbt = document.getElementById("sb-bbt-val");
+        const fill = document.getElementById("sb-progress-fill");
+        const ph = document.getElementById("grid-playhead");
+        if (step < 0) {
+            if (fill) fill.style.width = "0%";
+            if (ph) ph.style.display = "none";
+            const gn = document.getElementById("grid-now");
+            if (gn) gn.textContent = "STEP -- · —";
+            const sn = document.getElementById("ss-now");
+            if (sn) sn.textContent = "STEP -- · —";
+            if (!state.isPlaying) setInfo(VIEW_TITLES[state.activeView] || "");
+            return;
+        }
+        const beat = Math.floor(step / 4) + 1;
+        const tick = (step % 4) * 240; // 960 ppq, 4 steps per beat
+        if (bbt) bbt.textContent = `1 : ${pad2(beat)} : ${String(tick).padStart(3, "0")}`;
+        if (fill) fill.style.width = `${((step + 1) / state.totalSteps) * 100}%`;
+        if (ph) {
+            ph.style.display = "block";
+            // Offset past the note-name ruler column (64px, --ruler-w).
+            ph.style.left = `calc(64px + (100% - 64px) * ${step / 16})`;
+            ph.style.width = `calc((100% - 64px) / 16)`;
+        }
+        // "Now" text: everything sounding on this step, and the
+        // selected track's own line for the Grid / Step Seq views.
+        const sounding = [];
+        let trackNow = "—";
+        for (let t = 0; t < 16; t++) {
+            if (!state.pattern[t][step] || state.mixer[t].mute) continue;
+            const ns = state.patternNotes[t][step];
+            const txt = ns && ns.length
+                ? [...ns].sort((a, b) => a - b).map(noteName).join(" ")
+                : audio.instruments[t].name;
+            sounding.push(txt);
+            if (t === viewTrack) trackNow = txt;
+        }
+        setInfo(sounding.length ? sounding.join(" · ") : "—");
+        const nowText = `STEP ${pad2(step + 1)} · ${trackNow}`;
+        const gn = document.getElementById("grid-now");
+        if (gn) gn.textContent = nowText;
+        const sn = document.getElementById("ss-now");
+        if (sn) sn.textContent = nowText;
+    }
+
+    // --- LCD wiring: topbar, menu, tabs, track selectors ---
+    document.getElementById("tb-play").addEventListener("click", () => {
+        setTransportState(!state.isPlaying, state.isRecording, state.isOverdubbing);
+    });
+    document.getElementById("tb-browse").addEventListener("click", () => {
+        document.getElementById("btn-browse").click();
+    });
+    const menuBrowse = document.getElementById("menu-browse");
+    if (menuBrowse) menuBrowse.addEventListener("click", () => {
+        document.getElementById("btn-browse").click();
+    });
+    document.querySelectorAll("[data-nav]").forEach(el => {
+        el.addEventListener("click", () => switchView(el.dataset.nav));
+    });
+    document.querySelectorAll(".mm-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            document.querySelectorAll(".mm-tab").forEach(x => x.classList.toggle("active", x === tab));
+            ["seq", "track", "program"].forEach(k => {
+                const pane = document.getElementById(`mm-pane-${k}`);
+                if (pane) pane.classList.toggle("hidden", k !== tab.dataset.mmtab);
+            });
+        });
+    });
+    const mmDel = document.getElementById("mm-del-seq");
+    if (mmDel) mmDel.addEventListener("click", () => {
+        seqSlots[state.currentSeq] = null;
+        applyPattern({ pattern: Array.from({ length: 16 }, () => new Array(16).fill(false)),
+                       patternNotes: Array.from({ length: 16 }, () => new Array(16).fill(null)) });
+        setInfo(`Sequence cleared — ${seqName(state.currentSeq)}`);
+    });
+    const cycleTrack = (d) => {
+        viewTrack = (viewTrack + 16 + d) % 16;
+        const tag = document.getElementById("stepseq-inst-name");
+        if (tag) tag.innerText = `Pad ${viewTrack + 1}: ${audio.instruments[viewTrack].name}`;
+        renderSTP(); renderGrid(); renderStepSeq(); renderTrackRows();
+    };
+    document.getElementById("grid-track-prev").addEventListener("click", () => cycleTrack(-1));
+    document.getElementById("grid-track-next").addEventListener("click", () => cycleTrack(1));
+    document.getElementById("ss-track-prev").addEventListener("click", () => cycleTrack(-1));
+    document.getElementById("ss-track-next").addEventListener("click", () => cycleTrack(1));
+
+    refreshLcd();
 
     // Step Sequencer Toolbar Actions
     document.getElementById("btn-clear-seq").addEventListener("click", () => {
@@ -1130,6 +1491,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
         document.querySelectorAll(".step-btn").forEach(btn => btn.classList.remove("active"));
+        refreshLcd();
     });
 
     document.getElementById("btn-random-seq").addEventListener("click", () => {
@@ -1144,6 +1506,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const s = parseInt(btn.dataset.step);
             btn.classList.toggle("active", state.pattern[t][s]);
         });
+        refreshLcd();
     });
 
     // --- Build 16-Channel Mixer in Mixer View ---
@@ -1186,12 +1549,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- Oscilloscope & Real-time Visualizer ---
-    const scopeCanvas = document.getElementById("scope-canvas");
-    const scopeCtx = scopeCanvas.getContext("2d");
-
-    function renderScope() {
-        requestAnimationFrame(renderScope);
+    // --- Mixer VU decay loop ---
+    // (The old main-view oscilloscope is removed: in the real
+    // firmware no screen shows a scope — a waveform appears only
+    // in the Sample Editor and the Looper.)
+    function renderMeters() {
+        requestAnimationFrame(renderMeters);
 
         // Update Mixer VU Fills
         for (let i = 0; i < 16; i++) {
@@ -1200,72 +1563,18 @@ document.addEventListener("DOMContentLoaded", () => {
             const vuEl = document.getElementById(`vu-${i}`);
             if (vuEl) vuEl.style.height = `${ch.vuLevel * 100}%`;
         }
-
-        if (!audio.analyser) {
-            // Draw idle resting line
-            scopeCtx.fillStyle = "#06070a";
-            scopeCtx.fillRect(0, 0, scopeCanvas.width, scopeCanvas.height);
-            scopeCtx.strokeStyle = "#1a2530";
-            scopeCtx.lineWidth = 1;
-            scopeCtx.beginPath();
-            scopeCtx.moveTo(0, scopeCanvas.height / 2);
-            scopeCtx.lineTo(scopeCanvas.width, scopeCanvas.height / 2);
-            scopeCtx.stroke();
-            return;
-        }
-
-        const bufferLength = audio.analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        audio.analyser.getByteTimeDomainData(dataArray);
-
-        scopeCtx.fillStyle = "#06070a";
-        scopeCtx.fillRect(0, 0, scopeCanvas.width, scopeCanvas.height);
-
-        // Grid lines
-        scopeCtx.strokeStyle = "rgba(0, 210, 255, 0.08)";
-        scopeCtx.lineWidth = 1;
-        for (let x = 0; x < scopeCanvas.width; x += 40) {
-            scopeCtx.beginPath();
-            scopeCtx.moveTo(x, 0);
-            scopeCtx.lineTo(x, scopeCanvas.height);
-            scopeCtx.stroke();
-        }
-
-        // Waveform
-        scopeCtx.lineWidth = 2;
-        scopeCtx.strokeStyle = "#00d2ff";
-        scopeCtx.shadowColor = "#00d2ff";
-        scopeCtx.shadowBlur = 6;
-        scopeCtx.beginPath();
-
-        const sliceWidth = scopeCanvas.width * 1.0 / bufferLength;
-        let x = 0;
-
-        for (let i = 0; i < bufferLength; i++) {
-            const v = dataArray[i] / 128.0;
-            const y = v * scopeCanvas.height / 2;
-
-            if (i === 0) scopeCtx.moveTo(x, y);
-            else scopeCtx.lineTo(x, y);
-
-            x += sliceWidth;
-        }
-
-        scopeCtx.lineTo(scopeCanvas.width, scopeCanvas.height / 2);
-        scopeCtx.stroke();
-        scopeCtx.shadowBlur = 0;
     }
-    renderScope();
+    renderMeters();
 
     // --- Sampler Waveform Drawing ---
     const samplerCanvas = document.getElementById("sampler-canvas");
     if (samplerCanvas) {
         const sCtx = samplerCanvas.getContext("2d");
-        sCtx.fillStyle = "#07080c";
+        sCtx.fillStyle = "#151515";
         sCtx.fillRect(0, 0, samplerCanvas.width, samplerCanvas.height);
 
-        // Draw synthetic drum waveform sample
-        sCtx.strokeStyle = "#00d2ff";
+        // Draw synthetic drum waveform sample (firmware WAVEFORM_1 blue)
+        sCtx.strokeStyle = "#00aaee";
         sCtx.lineWidth = 2;
         sCtx.beginPath();
         const midY = samplerCanvas.height / 2;
