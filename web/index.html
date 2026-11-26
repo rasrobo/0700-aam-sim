@@ -493,6 +493,7 @@
                 <button type="button" id="lp-check" class="lp-btn">Check my result</button>
                 <button type="button" id="lp-export" class="lp-btn">Export my state</button>
                 <button type="button" id="lp-copylink" class="lp-btn">Copy link to my state</button>
+                <button type="button" id="btn-guided-tour" class="lp-btn">GET TO KNOW THE DEVICE — guided tour</button>
             </div>
             <div class="lp-row lp-starts-row">
                 <span class="lp-starts-label">Start at:</span>
@@ -555,6 +556,22 @@
                 </div>
                 <div id="browse-list"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Guide layer (page-level overlays, not part of the hardware
+         face): the hover-help tooltip and the guided-tour spotlight
+         + dialog. Driven from app.js (GUIDE_HELP / tour code). -->
+    <div id="hw-tooltip" class="hidden" role="tooltip"></div>
+    <div id="tour-spot" class="hidden" aria-hidden="true"></div>
+    <div id="tour-card" class="hidden" role="dialog" aria-labelledby="tour-title" aria-describedby="tour-body">
+        <div class="tour-count" id="tour-count"></div>
+        <h3 id="tour-title"></h3>
+        <p id="tour-body"></p>
+        <div class="tour-nav">
+            <button type="button" id="tour-back" class="lp-btn">Back</button>
+            <button type="button" id="tour-next" class="lp-btn tour-next">Next</button>
+            <button type="button" id="tour-end" class="lp-btn">End tour</button>
         </div>
     </div>
 

@@ -1852,4 +1852,424 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     window.__loopproof = { snapshot: lpSnapshot, apply: lpApply,
         encode: lpEncode, decode: lpDecode, diff: lpDiff, check: lpRunCheck };
+
+    // ============================================================
+    // Guide layer — page-level learning overlays. Neither feature
+    // is part of the hardware face or the LCD: both float above the
+    // page, never block or delay a press, and the sim stays live
+    // underneath them.
+    //   1) Hover help: a themed tooltip explains every control.
+    //   2) "Get to know the device": a guided tour that spotlights
+    //      one control at a time with a dialog card.
+    // ============================================================
+
+    // --- 1) Hover help ------------------------------------------
+    // One short sentence per control, in the device's own terms.
+    const GUIDE_HELP_BY_ID = {
+        // Transport
+        "btn-play": "PLAY — starts the 16-step loop playing.",
+        "btn-play-start": "PLAY START — restarts the loop from step 1 and plays.",
+        "btn-stop": "STOP — stops playback and any recording.",
+        "btn-rec": "REC — arms recording: with the loop playing, every strike is written into the loop at the step that's playing. REC captures the first pass.",
+        "btn-overdub": "OVERDUB — layers new strikes into the playing loop without erasing what's already there. Chords over drums, bass over chords: this is how layers are added.",
+        // Tempo & timing
+        "btn-tap-tempo": "TAP TEMPO — tap steadily to set the tempo; the display shows the BPM your taps settle on.",
+        "btn-tc": "TC (Timing Correct) — on, strikes are written into the step that's playing; off, into the nearest step.",
+        // Pads & levels
+        "btn-full-level": "FULL LEVEL — on, every pad strike plays at full velocity; off, velocity follows where on the pad you hit (lower = harder).",
+        "btn-16-level": "16 LEVEL — keygroups: strike a melodic pad, press 16 LEVEL, and all 16 pads play that one sound at 16 pitches (pad 5 plays its root note).",
+        "btn-erase": "ERASE — clears the last struck pad's row from the pattern.",
+        // Banks
+        "btn-bank-a": "BANK A — the pads play bank A. Hold SHIFT for bank E.",
+        "btn-bank-b": "BANK B — the pads play bank B. Hold SHIFT for bank F.",
+        "btn-bank-c": "BANK C — the pads play bank C. Hold SHIFT for bank G.",
+        "btn-bank-d": "BANK D — the pads play bank D. Hold SHIFT for bank H.",
+        // Mode / view buttons
+        "btn-main": "MAIN — switches the screen to Main Mode: sequences, tracks and programs in lists.",
+        "btn-step-seq": "STEP SEQ — the step sequencer: click steps on and off to program the selected track's rhythm.",
+        "btn-track-mix": "TRACK MIX — the Track Mixer: a fader, mute and solo for every track.",
+        "btn-sampler": "SAMPLER — the Sample Editor: the last struck sound's waveform, ready to edit.",
+        "btn-sample-edit": "SAMPLE EDIT — the Sample Editor: reverse, normalize or trim the last struck sound.",
+        "btn-program-edit": "PROG EDIT — Program Edit: shape the selected sound — filter, envelope, tuning, velocity.",
+        "btn-menu": "MENU — the mode menu on the screen: every view the device offers.",
+        "btn-browse": "BROWSE — the pattern slots: save the current pattern under a name, or load one back. Slots live in this browser.",
+        "btn-track-mute": "TRACK MUTE — mutes the last struck pad's track; press again to unmute.",
+        "btn-next-seq": "NEXT SEQ — moves to the next of the four sequence slots; each slot keeps its own pattern.",
+        // Jog cluster
+        "btn-note-repeat": "NOTE REPEAT — while on, the last struck pad re-triggers in time until you switch it off.",
+        "btn-back": "BACK — returns the screen to Main Mode.",
+        "btn-copy": "COPY — copies the current pattern. SHIFT + COPY pastes it back.",
+        "btn-plus": "+ — nudges the selected value up (the jog wheel's step button).",
+        "btn-minus": "− — nudges the selected value down (the jog wheel's step button).",
+        "btn-shift": "SHIFT — hold to reach the buttons' second labels: banks E–H, SAVE, PASTE and more.",
+        "jog-wheel": "The data wheel — drag it, scroll over it, or use − / + to change the selected value.",
+        "jog-center-btn": "ENTER — the jog wheel's push button: confirms the current selection.",
+        // Knobs, Q-Links, touch strip
+        "knob-master": "MASTER — the master volume knob. It and the OUTPUT strip below the device drive the same level.",
+        "knob-rec": "REC GAIN — how hot the sampler records incoming audio.",
+        "qlink-1": "Q1 CUTOFF — the filter cutoff for the selected sound. Drag up or down.",
+        "qlink-2": "Q2 RESONANCE — the filter resonance (the peak at the cutoff) for the selected sound.",
+        "qlink-3": "Q3 DECAY — how long the selected sound rings after a strike.",
+        "qlink-4": "Q4 TUNING — the selected sound's tuning, in semitones.",
+        "touch-strip": "TOUCH STRIP — drag along it to bend the pitch of what plays.",
+        // LCD top bar & in-screen controls
+        "tb-play": "PLAY on the screen's top bar — starts and stops the loop, same as the PLAY button.",
+        "tb-browse": "BROWSE on the screen's top bar — the pattern slots, same as the BROWSE button.",
+        "mm-del-seq": "DELETE — clears the selected sequence's pattern.",
+        "menu-browse": "File Browser — save and load patterns in this browser's slots.",
+        "grid-track-prev": "Previous track — show the track above in the Grid.",
+        "grid-track-next": "Next track — show the track below in the Grid.",
+        "ss-track-prev": "Previous track — program the track above in the step sequencer.",
+        "ss-track-next": "Next track — program the track below in the step sequencer.",
+        "btn-clear-seq": "CLEAR — wipes the pattern in the step sequencer.",
+        "btn-random-seq": "RANDOMIZE — deals a random pattern in the step sequencer. Undo it with CLEAR and your own clicks.",
+        "btn-sample-rev": "REVERSE — plays the sample backwards (edits the last struck sound).",
+        "btn-sample-norm": "NORMALIZE — raises the sample to full level without clipping.",
+        "btn-sample-crop": "TRIM — crops the sample to its sounding part.",
+        "param-cutoff": "Cutoff Frequency — where the filter starts closing; lower is darker.",
+        "param-res": "Resonance (Q) — how much the filter emphasises its cutoff point.",
+        "param-atk": "Attack Time — how quickly the sound reaches full level after a strike.",
+        "param-decay": "Decay Multiplier — stretches or shortens how long the sound rings.",
+        "param-tune": "Semitone Tune — shifts the sound's pitch in semitones.",
+        "param-vel-sens": "Velocity Sensitivity — how much your strike strength changes the volume.",
+        "btn-reconnect-ws": "RECONNECT WEBSOCKET — re-links the harness to a hardware bridge, if one is running.",
+        "btn-download-golden": "EXPORT GOLDEN JSON TRACE — downloads a trace of the hardware-protocol traffic for debugging.",
+        // Page chrome
+        "btn-sales-video": "Watch the 4K showcase and hardware walkthrough on YouTube.",
+        "btn-toggle-keys": "KEY MAP — the keyboard shortcuts that play this device from a computer keyboard.",
+        "btn-fullscreen": "EXPAND — toggles fullscreen.",
+        "modal-close": "Close this panel.",
+        // Output strip & learner panel
+        "output-volume": "OUTPUT — the master volume slider. It and the MASTER knob drive the same level; the meter shows the live output.",
+        "lp-song": "The tutorial song you're following — its reference state is what Check compares against.",
+        "lp-check": "Check my result — compares your loop, step by step, against the tutorial's reference state.",
+        "lp-export": "Export my state — downloads your current loop as a file you can keep or share.",
+        "lp-copylink": "Copy link to my state — a link that reloads the simulator with your loop loaded.",
+        "btn-guided-tour": "A short guided tour: the machine's main controls, one at a time, in the order you'd use them.",
+        // Browse modal
+        "browse-close": "Close the pattern browser.",
+        "browse-name": "Name for the pattern you're about to save.",
+        "browse-save": "Save the current pattern into a slot in this browser.",
+    };
+
+    // Help for generated / class-based controls (pads, step buttons,
+    // LCD tabs, mixer parts, browse rows…). Checked in order.
+    const GUIDE_HELP_RULES = [
+        [(el) => el.closest(".pad"), (el) => {
+            const pad = el.closest(".pad");
+            const name = (pad.querySelector(".pad-name") || {}).textContent || "sound";
+            return `Pad ${pad.dataset.pad} — ${name.trim()}: strike to play it. Lower on the pad = harder hit. While the loop plays with REC or OVERDUB lit, the strike is captured into the loop at the current step.`;
+        }],
+        [(el) => el.closest(".step-btn"), (el) => {
+            const b = el.closest(".step-btn");
+            return `Step ${Number(b.dataset.step) + 1} — click to toggle this step on or off for the track shown. Lit steps sound in the loop.`;
+        }],
+        [(el) => el.closest(".ss-note-area"), (el) => {
+            const col = el.closest(".ss-col");
+            const b = col && col.querySelector(".step-btn");
+            const s = b ? `Step ${Number(b.dataset.step) + 1}'s` : "This step's";
+            return `${s} note area — the bar shows the step's velocity. Click to toggle the step.`;
+        }],
+        [(el) => el.closest(".grid-cell"), () =>
+            "A cell in the Grid piano roll — click to add or clear a note for the selected track at this step. Amber blocks are notes in the loop."],
+        [(el) => el.closest(".fader-slider"), () =>
+            "Track fader — drag to set this track's volume in the mix."],
+        [(el) => el.closest(".strip-btn.mute"), () =>
+            "M — mute this track in the mixer."],
+        [(el) => el.closest(".strip-btn.solo"), () =>
+            "S — solo this track: hear it on its own."],
+        [(el) => el.closest(".mm-ms"), (el) =>
+            (el.closest(".mm-ms").textContent || "").trim().startsWith("S")
+                ? "S — solo this track: hear it on its own."
+                : "M — mute this track."],
+        [(el) => el.closest(".mm-tab"), (el) => ({
+            seq: "Sequence — the four sequence slots and their settings; click a row to select a sequence.",
+            track: "Track — the 16 tracks with their programs, lengths, mute and solo.",
+            program: "Program — the sounds loaded across the 16 pads.",
+        })[el.closest(".mm-tab").dataset.mmtab] || "A Main Mode list."],
+        [(el) => el.closest(".lcd-tab"), (el) => ({
+            menu: "MENU — the mode menu: every screen the device offers.",
+            main: "MAIN — Main Mode: sequences, tracks and programs in lists.",
+            grid: "GRID — the piano roll: the selected track's notes as blocks, with the playhead sweeping. Click cells to edit.",
+            stepseq: "STEP SEQ — the step sequencer for the selected track.",
+            prefs: "SETTINGS — device information and harness details.",
+        })[el.closest(".lcd-tab").dataset.view] || "Switches the screen."],
+        [(el) => el.closest(".menu-item"), (el) => {
+            const it = el.closest(".menu-item");
+            if (it.id === "menu-browse") return GUIDE_HELP_BY_ID["menu-browse"];
+            return ({
+                main: "Main Mode — sequences, tracks and programs in lists.",
+                grid: "Grid View — the piano roll for the selected track.",
+                stepseq: "Step Sequencer — click steps on and off, one track at a time.",
+                mixer: "Track Mixer — a fader, mute and solo for every track.",
+                sampler: "Sample Editor — the selected sound's waveform and edits.",
+                padedit: "Program Edit — shape the selected sound: filter, envelope, tuning.",
+                prefs: "Settings — device information and harness details.",
+            })[it.dataset.nav] || "Opens this screen.";
+        }],
+        [(el) => el.closest(".mh-back"), () => "Back to Main Mode."],
+        [(el) => el.closest(".mh-arrow"), () => "Previous / next track."],
+        [(el) => el.closest(".browse-row button"), (el) =>
+            (el.closest("button").textContent || "").trim() === "Load"
+                ? "Load this saved pattern into the machine."
+                : "Delete this saved pattern slot."],
+        [(el) => el.closest("#lp-starts a"), () =>
+            "Loads the loop as it stands at the start of this tutorial step — build from here."],
+        [(el) => el.closest(".mm-row"), () => "Click to select this row."],
+    ];
+
+    const guideHelpFor = (el) => {
+        if (!el || el.nodeType !== 1) return null;
+        for (const [match, text] of GUIDE_HELP_RULES) {
+            try { if (match(el)) return text(el); } catch (e) { /* keep looking */ }
+        }
+        for (let n = el; n && n !== document.body; n = n.parentElement) {
+            if (!n.id) continue;
+            if (GUIDE_HELP_BY_ID[n.id]) return GUIDE_HELP_BY_ID[n.id];
+            if (/^mute-\d+$/.test(n.id)) return "M — mute this track in the mixer.";
+            if (/^solo-\d+$/.test(n.id)) return "S — solo this track: hear it on its own.";
+        }
+        return null;
+    };
+
+    const tooltip = document.getElementById("hw-tooltip");
+    let tipTarget = null, tipTimer = null, tipPendingHost = null, tipStashedTitles = [];
+    let tourOpen = false; // the tour suppresses tooltips while it runs
+
+    const stashTitles = (fromEl) => {
+        tipStashedTitles = [];
+        for (let n = fromEl; n && n !== document.documentElement; n = n.parentElement) {
+            if (n.hasAttribute && n.hasAttribute("title")) {
+                tipStashedTitles.push([n, n.getAttribute("title")]);
+                n.removeAttribute("title");
+            }
+        }
+    };
+    const restoreTitles = () => {
+        for (const [n, v] of tipStashedTitles) n.setAttribute("title", v);
+        tipStashedTitles = [];
+    };
+    const hideTooltip = () => {
+        if (tipTimer) { clearTimeout(tipTimer); tipTimer = null; }
+        tipPendingHost = null;
+        if (tooltip) tooltip.classList.add("hidden");
+        tipTarget = null;
+        restoreTitles();
+    };
+    const placeTooltip = (x, y, anchorRect) => {
+        const pad = 8, tw = tooltip.offsetWidth, th = tooltip.offsetHeight;
+        let left, top;
+        if (anchorRect) { // keyboard focus / touch: anchor to the control
+            left = anchorRect.left + anchorRect.width / 2 - tw / 2;
+            top = anchorRect.bottom + 10;
+            if (top + th > window.innerHeight - pad) top = anchorRect.top - th - 10;
+        } else {          // mouse: follow the pointer
+            left = x + 16; top = y + 18;
+            if (left + tw > window.innerWidth - pad) left = x - tw - 12;
+            if (top + th > window.innerHeight - pad) top = y - th - 12;
+        }
+        tooltip.style.left = Math.max(pad, Math.min(left, window.innerWidth - tw - pad)) + "px";
+        tooltip.style.top = Math.max(pad, Math.min(top, window.innerHeight - th - pad)) + "px";
+    };
+    const showTooltip = (target, text, x, y, anchorRect) => {
+        if (!tooltip || tourOpen) return;
+        tipTarget = target;
+        tooltip.textContent = text;
+        tooltip.classList.remove("hidden");
+        placeTooltip(x || 0, y || 0, anchorRect);
+    };
+    if (tooltip) {
+        document.addEventListener("mouseover", (e) => {
+            if (tourOpen) return;
+            const text = guideHelpFor(e.target);
+            const host = text ? (e.target.closest(".pad,button,[id],input,select,a,.step-btn,.grid-cell,.fader-slider") || e.target) : null;
+            if (!text) {
+                if (tipTimer) { clearTimeout(tipTimer); tipTimer = null; tipPendingHost = null; }
+                if (tipTarget) hideTooltip();
+                return;
+            }
+            if (tipTarget === host && !tooltip.classList.contains("hidden")) {
+                placeTooltip(e.clientX, e.clientY, null);
+                return;
+            }
+            if (tipPendingHost === host && tipTimer) return; // already counting down for this control
+            if (tipTimer) clearTimeout(tipTimer);
+            tipPendingHost = host;
+            const delay = tooltip.classList.contains("hidden") ? 300 : 60;
+            tipTimer = setTimeout(() => {
+                tipPendingHost = null;
+                stashTitles(e.target);
+                showTooltip(host, text, e.clientX, e.clientY, null);
+            }, delay);
+        });
+        document.addEventListener("mousemove", (e) => {
+            if (tipTarget && !tooltip.classList.contains("hidden"))
+                placeTooltip(e.clientX, e.clientY, null);
+        });
+        document.addEventListener("mouseout", (e) => {
+            if (!e.relatedTarget) { hideTooltip(); return; }
+            if (tipTarget && e.target && !tipTarget.contains(e.relatedTarget)
+                     && !guideHelpFor(e.relatedTarget)) hideTooltip();
+        });
+        // A press must never wait for — or be covered by — a tooltip.
+        let lastPointerDownAt = 0;
+        document.addEventListener("pointerdown", () => {
+            lastPointerDownAt = Date.now();
+            hideTooltip();
+        }, true);
+        document.addEventListener("scroll", hideTooltip, { capture: true, passive: true });
+        document.addEventListener("focusin", (e) => {
+            if (tourOpen) return;
+            // Focus that arrives because of a pointer press is not
+            // keyboard focus — the press already dismissed the tip.
+            if (Date.now() - lastPointerDownAt < 600) return;
+            const text = guideHelpFor(e.target);
+            if (!text) return;
+            if (tipTimer) clearTimeout(tipTimer);
+            stashTitles(e.target);
+            showTooltip(e.target, text, 0, 0, e.target.getBoundingClientRect());
+        });
+        document.addEventListener("focusout", hideTooltip);
+        // Touch: press-and-hold (~0.55 s, without moving) shows the help;
+        // a normal tap or strike is untouched — the press itself has
+        // already happened by the time the tooltip appears.
+        let touchTimer = null, touchStart = null;
+        document.addEventListener("pointerdown", (e) => {
+            if (e.pointerType !== "touch") return;
+            touchStart = { x: e.clientX, y: e.clientY, el: e.target };
+            touchTimer = setTimeout(() => {
+                const text = touchStart && guideHelpFor(touchStart.el);
+                if (text && !tourOpen) {
+                    stashTitles(touchStart.el);
+                    showTooltip(touchStart.el, text, 0, 0, touchStart.el.getBoundingClientRect());
+                    setTimeout(() => { if (tipTarget === touchStart.el) hideTooltip(); }, 2400);
+                }
+            }, 550);
+        });
+        const cancelTouch = () => { if (touchTimer) { clearTimeout(touchTimer); touchTimer = null; } };
+        document.addEventListener("pointerup", cancelTouch);
+        document.addEventListener("pointercancel", cancelTouch);
+        document.addEventListener("pointermove", (e) => {
+            if (touchStart && Math.hypot(e.clientX - touchStart.x, e.clientY - touchStart.y) > 12) cancelTouch();
+        }, { passive: true });
+    }
+
+    // --- 2) "Get to know the device" guided tour -----------------
+    const TOUR_STEPS = [
+        { sel: "#btn-play", title: "Start with PLAY",
+          body: "This is the heartbeat of the machine. PLAY starts the 16-step loop; STOP halts it. A starter groove is already loaded — press PLAY now and hear it go round." },
+        { sel: "#btn-tap-tempo", title: "Tap the tempo",
+          body: "No typing numbers: TAP TEMPO takes the speed from your taps. Four steady taps and the loop follows your feel — the BPM you've tapped shows on the screen." },
+        { sel: "#btn-step-seq", title: "Program the beats",
+          body: "STEP SEQ opens the step sequencer. Press it and look at the screen: sixteen steps for one track — click steps on to place hits, off to remove them. That's how a rhythm gets written." },
+        { sel: "#pad-matrix", title: "The pads",
+          body: "Sixteen pads: drums on the lower rows, bass notes up top. Strike one — where and how hard you hit sets its volume. While the loop plays, these strikes can be captured into it." },
+        { sel: "#btn-16-level", title: "16 LEVEL — one sound, sixteen notes",
+          body: "Strike a melodic pad, then press 16 LEVEL: all sixteen pads become that one sound at sixteen pitches — a little keyboard. Melodies and basslines are played in this way." },
+        { sel: "#btn-rec", title: "REC — capture the first pass",
+          body: "REC arms recording. With the loop playing and REC lit, everything you strike is written into the loop at the step that's playing. Use REC to lay down the first layer." },
+        { sel: "#btn-overdub", title: "OVERDUB — add layers on top",
+          body: "OVERDUB is REC's layering twin: the loop keeps what it already has and adds your new strikes over it. Chords over drums, bass over chords, melody last — that is the whole looping method." },
+        { sel: ".lcd-tab[data-view=\"grid\"]", title: "GRID — watch it build",
+          body: "The GRID tab turns the screen into a piano roll for one track: captured notes appear as amber blocks. Press it while a loop plays and watch each layer land; the ◀ ▶ arrows change track." },
+        { sel: ".lcd-tab[data-view=\"main\"]", title: "MAIN — home base",
+          body: "MAIN is the home screen: sequences, tracks and programs in lists. The strip at the bottom of the screen always names the sequence, track and program in play." },
+        { sel: "#btn-browse", title: "BROWSE — keep what you make",
+          body: "Made a loop you like? BROWSE opens the pattern slots: save the current pattern under a name and load it back whenever you return. Slots live in this browser, on this device." },
+        { sel: "#output-strip", title: "OUTPUT — your volume",
+          body: "Under the device sits the output strip: the master volume and a live meter for everything the machine plays. That's the tour — now press PLAY and build a loop of your own." },
+    ];
+    const tourSpot = document.getElementById("tour-spot");
+    const tourCard = document.getElementById("tour-card");
+    const tourCount = document.getElementById("tour-count");
+    const tourTitle = document.getElementById("tour-title");
+    const tourBody = document.getElementById("tour-body");
+    const tourBack = document.getElementById("tour-back");
+    const tourNext = document.getElementById("tour-next");
+    const tourEndBtn = document.getElementById("tour-end");
+    const tourStartBtn = document.getElementById("btn-guided-tour");
+    let tourIdx = -1, tourRaf = 0;
+
+    const tourTarget = () => {
+        const step = TOUR_STEPS[tourIdx];
+        return step ? document.querySelector(step.sel) : null;
+    };
+    const positionTour = () => {
+        if (!tourOpen) return;
+        const t = tourTarget();
+        if (t) {
+            const r = t.getBoundingClientRect();
+            const p = 6;
+            tourSpot.style.left = (r.left - p) + "px";
+            tourSpot.style.top = (r.top - p) + "px";
+            tourSpot.style.width = (r.width + p * 2) + "px";
+            tourSpot.style.height = (r.height + p * 2) + "px";
+            // Card: below the target if it fits, above if not, and
+            // docked to the bottom on short screens.
+            const cw = tourCard.offsetWidth, ch = tourCard.offsetHeight;
+            let top;
+            if (r.bottom + ch + 18 <= window.innerHeight) top = r.bottom + 14;
+            else if (r.top - ch - 18 >= 0) top = r.top - ch - 14;
+            else top = window.innerHeight - ch - 12;
+            let left = r.left + r.width / 2 - cw / 2;
+            left = Math.max(12, Math.min(left, window.innerWidth - cw - 12));
+            tourCard.style.left = left + "px";
+            tourCard.style.top = Math.max(8, top) + "px";
+        }
+        tourRaf = requestAnimationFrame(positionTour);
+    };
+    const showTourStep = (i) => {
+        tourIdx = Math.max(0, Math.min(i, TOUR_STEPS.length - 1));
+        const step = TOUR_STEPS[tourIdx];
+        tourCount.textContent = `${tourIdx + 1} of ${TOUR_STEPS.length}`;
+        tourTitle.textContent = step.title;
+        tourBody.textContent = step.body;
+        tourBack.disabled = tourIdx === 0;
+        tourNext.textContent = tourIdx === TOUR_STEPS.length - 1 ? "Finish" : "Next";
+        const t = tourTarget();
+        if (t) t.scrollIntoView({ block: "center", behavior: "smooth" });
+    };
+    const startTour = () => {
+        if (!tourSpot || !tourCard) return;
+        hideTooltip();
+        tourOpen = true;
+        tourSpot.classList.remove("hidden");
+        tourCard.classList.remove("hidden");
+        showTourStep(0);
+        cancelAnimationFrame(tourRaf);
+        tourRaf = requestAnimationFrame(positionTour);
+        tourNext.focus();
+    };
+    const endTour = () => {
+        tourOpen = false;
+        cancelAnimationFrame(tourRaf);
+        if (tourSpot) tourSpot.classList.add("hidden");
+        if (tourCard) tourCard.classList.add("hidden");
+        tourIdx = -1;
+        if (tourStartBtn) tourStartBtn.focus();
+    };
+    if (tourStartBtn && tourCard) {
+        tourStartBtn.addEventListener("click", startTour);
+        tourEndBtn.addEventListener("click", endTour);
+        tourBack.addEventListener("click", () => showTourStep(tourIdx - 1));
+        tourNext.addEventListener("click", () => {
+            if (tourIdx >= TOUR_STEPS.length - 1) endTour();
+            else showTourStep(tourIdx + 1);
+        });
+        document.addEventListener("keydown", (e) => {
+            if (!tourOpen) return;
+            if (e.key === "Escape") { endTour(); return; }
+            if (tourCard.contains(document.activeElement)) {
+                if (e.key === "ArrowRight") { e.preventDefault(); tourNext.click(); }
+                if (e.key === "ArrowLeft" && tourIdx > 0) { e.preventDefault(); tourBack.click(); }
+            }
+        });
+        window.addEventListener("resize", () => { if (tourOpen) positionTour(); });
+    }
+
+    window.__simGuide = {
+        help: GUIDE_HELP_BY_ID, helpFor: guideHelpFor,
+        tourSteps: TOUR_STEPS, startTour, endTour,
+        tourIndex: () => tourIdx, tourIsOpen: () => tourOpen,
+    };
 });
