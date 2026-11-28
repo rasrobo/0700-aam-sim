@@ -191,6 +191,13 @@ This project is licensed under the GNU Affero General Public License v3.0 or lat
 
 Third-party copyright notices and upstream attributions are documented in [NOTICE.md](NOTICE.md).
 
+## Support
+
+This simulator is free and open source. If it helped you learn the
+instrument — or a LoopProof tutorial taught you a song — and you'd
+like to support more of this work:
+https://buymeacoffee.com/robodigitalis
+
 ## Sound design notes (learned the hard way, 2026-11-22)
 
 - **One-shot blips are drum sounds, not instruments.** The original pitched
